@@ -106,7 +106,7 @@ class TestDescubrimiento(unittest.TestCase):
             self.assertEqual(len(generadores), 1)
             self.assertEqual(generadores[0].nombre, "mi-plantilla")
             self.assertEqual(generadores[0].tipos, ("informe", "memorandum"))
-            self.assertEqual(generadores[0].comando, ("python",))
+            self.assertEqual(generadores[0].comando, (sys.executable,))
             self.assertTrue(generadores[0].cubre("informe"))
             self.assertFalse(generadores[0].cubre("acta"))
 

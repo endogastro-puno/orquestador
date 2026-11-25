@@ -26,6 +26,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -133,7 +134,9 @@ def cargar(carpeta: Path) -> Generador:
 
     comando = manifiesto.get("comando")
     if comando is None:
-        comando = ["python"] if script.suffix == ".py" else ["node"]
+        # Mismo intérprete que corre el motor: no depende del PATH ni de que
+        # "python" apunte a la versión correcta en una máquina con varias.
+        comando = [sys.executable] if script.suffix == ".py" else ["node"]
     if not isinstance(comando, list) or not comando or not all(isinstance(c, str) for c in comando):
         raise ValueError(f"{carpeta / NOMBRE_MANIFIESTO}: 'comando' debe ser una lista de texto")
 
@@ -258,6 +261,9 @@ def ejecutar(
         ruta_payload = Path(temporal.name)
 
     entorno = os.environ.copy()
+    # Un PYTHONHOME heredado apunta al stdlib de otra instalación y rompe al
+    # intérprete hijo (típico en máquinas con varias versiones de Python).
+    entorno.pop("PYTHONHOME", None)
     nodos = base / "node_modules"
     if nodos.is_dir():
         entorno["NODE_PATH"] = str(nodos) + (
