@@ -81,3 +81,15 @@ pase a ser del proyecto.
   es un generador de cliente (datos de AndesLogix) que quedó en la zona del proyecto.
   Con este contrato debería vivir en `usuario/generadores/`; migrarlo exige su
   autorización porque escribe en la zona del usuario.
+- **L8** (2026-11-25) — Revisión nativa (RDD) sobre el rango `d944c99..e543620`, 4 lentes
+  (risk, resilience, readability, reliability): **aprobada**. 0 bloqueantes; el único
+  CRITICAL (`R3-001`) fue **refutado**; el resto son advertencias y sugerencias
+  informativas. Authority quemada con `review-56bbe8ee3b584466`.
+  Hallazgos reales que quedan como trabajo posterior (ninguno bloquea la entrega):
+  descubrimiento no aislado (un manifiesto roto bloquea todos los tipos),
+  `subprocess.TimeoutExpired` no mapeado a `ValueError`, `--generador` resuelto contra
+  el cwd y silenciado por `--sin-generador`, raíz del generador no restringida a
+  `usuario/generadores/`, artefacto parcial en la ruta final si el generador falla, y
+  el chequeo de `PENDIENTE` del ejemplo no mira el encabezado.
+- **L9** (2026-11-25) — Rama publicada: `origin/feature/generadores-usuario` (3 commits).
+  PR sin abrir: lo decide el usuario.
