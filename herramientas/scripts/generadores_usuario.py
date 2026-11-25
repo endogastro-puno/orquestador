@@ -57,6 +57,18 @@ class Generador:
         return "*" in self.tipos
 
 
+@dataclass(frozen=True)
+class GeneradorRoto:
+    """Una carpeta con manifiesto que no se pudo cargar.
+
+    Se reporta, no se lanza: un manifiesto roto no puede bloquear la generación
+    de los tipos que no dependen de él.
+    """
+
+    carpeta: Path
+    error: str
+
+
 def _plano(tabla: dict[str, Any] | None) -> dict[str, str]:
     """Convierte una tabla de clave/valor en un mapa campo -> valor."""
     if not tabla:
@@ -135,17 +147,32 @@ def cargar(carpeta: Path) -> Generador:
     )
 
 
-def descubrir(directorio: Path | None = None) -> list[Generador]:
-    """Devuelve los generadores del usuario, ordenados por nombre."""
+def descubrir_todos(
+    directorio: Path | None = None,
+) -> tuple[list[Generador], list[GeneradorRoto]]:
+    """Devuelve (generadores válidos, carpetas rotas), ordenados por nombre.
+
+    Un manifiesto inválido se reporta y se saltea: no aborta el descubrimiento
+    ni bloquea los tipos que otros generadores cubren.
+    """
     base = Path(directorio) if directorio else DIR_GENERADORES
     if not base.is_dir():
-        return []
-    generadores: list[Generador] = []
+        return [], []
+    validos: list[Generador] = []
+    rotos: list[GeneradorRoto] = []
     for carpeta in sorted(p for p in base.iterdir() if p.is_dir()):
         if not (carpeta / NOMBRE_MANIFIESTO).is_file():
             continue
-        generadores.append(cargar(carpeta))
-    return sorted(generadores, key=lambda g: g.nombre)
+        try:
+            validos.append(cargar(carpeta))
+        except ValueError as error:
+            rotos.append(GeneradorRoto(carpeta=carpeta, error=str(error)))
+    return sorted(validos, key=lambda g: g.nombre), rotos
+
+
+def descubrir(directorio: Path | None = None) -> list[Generador]:
+    """Devuelve sólo los generadores válidos, ordenados por nombre."""
+    return descubrir_todos(directorio)[0]
 
 
 def seleccionar(generadores: list[Generador], tipo: str) -> Generador | None:
@@ -170,7 +197,7 @@ def seleccionar(generadores: list[Generador], tipo: str) -> Generador | None:
     return candidatos[0]
 
 
-def construir_payload(
+def construir_payload_generador(
     spec: dict[str, Any],
     datos: dict[str, dict[str, Any]],
     bloques: list[dict[str, Any]],
@@ -193,6 +220,7 @@ def construir_payload(
         "tipo": spec["tipo"],
         "titulo": titulo,
         "formato": spec["formato"],
+        # Pie del documento, no la versión del contrato: VERSION_PAYLOAD es otra cosa.
         "pie": f"{titulo} · v1.0",
         "salida": salida,
         "bloques": bloques,
@@ -209,8 +237,19 @@ def ejecutar(
     raiz: Path | None = None,
     timeout: int = TIEMPO_LIMITE,
 ) -> Path:
-    """Ejecuta el generador del usuario como subproceso y devuelve la salida."""
+    """Ejecuta el generador del usuario como subproceso y devuelve la salida.
+
+    Si el generador falla o no produce el archivo, se descarta lo que haya
+    quedado escrito en esta corrida. Nunca se toca un archivo que ya existía:
+    la ruta destino se valida como nueva antes de ejecutar.
+    """
     base = Path(raiz).resolve() if raiz else RAIZ
+    salida = base / payload["salida"]
+    existia_antes = salida.exists()
+
+    def descartar_parcial() -> None:
+        if not existia_antes and salida.exists():
+            salida.unlink(missing_ok=True)
 
     with tempfile.NamedTemporaryFile(
         "w", encoding="utf-8", suffix=".json", delete=False
@@ -238,18 +277,29 @@ def ejecutar(
             stdin=subprocess.DEVNULL,
             timeout=timeout,
         )
+    except subprocess.TimeoutExpired:
+        descartar_parcial()
+        raise ValueError(
+            f"el generador '{generador.nombre}' superó el límite de {timeout} segundos"
+        ) from None
+    except OSError as error:
+        raise ValueError(
+            f"no se pudo ejecutar el generador '{generador.nombre}' "
+            f"con {comando[0]!r}: {error}"
+        ) from None
     finally:
         ruta_payload.unlink(missing_ok=True)
 
     if resultado.returncode != 0:
+        descartar_parcial()
         detalle = (resultado.stderr or resultado.stdout or "").strip()
         raise ValueError(
             f"el generador '{generador.nombre}' terminó con código {resultado.returncode}"
             + (f": {detalle}" if detalle else "")
         )
 
-    salida = base / payload["salida"]
     if not salida.is_file() or salida.stat().st_size == 0:
+        descartar_parcial()
         raise ValueError(
             f"el generador '{generador.nombre}' no produjo un archivo válido en {payload['salida']}"
         )

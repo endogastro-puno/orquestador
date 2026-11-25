@@ -52,6 +52,27 @@ import sys
 sys.exit(0)
 """
 
+SCRIPT_LENTO = """\
+import time
+
+time.sleep(30)
+"""
+
+SCRIPT_ESCRIBE_Y_FALLA = """\
+import json
+import pathlib
+import sys
+
+argumentos = sys.argv[1:]
+entrada = argumentos[argumentos.index("--entrada") + 1]
+payload = json.loads(pathlib.Path(entrada).read_text(encoding="utf-8"))
+destino = pathlib.Path(payload["salida"])
+destino.parent.mkdir(parents=True, exist_ok=True)
+destino.write_text("parcial", encoding="utf-8")
+sys.stderr.write("fallo despues de escribir\\n")
+sys.exit(1)
+"""
+
 
 def escribir_generador(
     base: Path,
@@ -98,7 +119,7 @@ class TestDescubrimiento(unittest.TestCase):
 
             self.assertEqual(generadores[0].comando, ("node",))
 
-    def test_manifiesto_sin_tipos_falla_con_mensaje_claro(self) -> None:
+    def test_manifiesto_sin_tipos_se_reporta_como_roto(self) -> None:
         with tempfile.TemporaryDirectory() as temporal:
             base = Path(temporal)
             carpeta = base / "roto"
@@ -107,12 +128,13 @@ class TestDescubrimiento(unittest.TestCase):
                 json.dumps({"nombre": "roto"}), encoding="utf-8"
             )
 
-            with self.assertRaises(ValueError) as ctx:
-                gu.descubrir(base)
+            validos, rotos = gu.descubrir_todos(base)
 
-            self.assertIn("tipos", str(ctx.exception))
+            self.assertEqual(validos, [])
+            self.assertEqual(len(rotos), 1)
+            self.assertIn("tipos", rotos[0].error)
 
-    def test_script_declarado_inexistente_falla(self) -> None:
+    def test_script_declarado_inexistente_se_reporta_como_roto(self) -> None:
         with tempfile.TemporaryDirectory() as temporal:
             base = Path(temporal)
             carpeta = base / "roto"
@@ -122,10 +144,34 @@ class TestDescubrimiento(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            with self.assertRaises(ValueError) as ctx:
-                gu.descubrir(base)
+            _, rotos = gu.descubrir_todos(base)
 
-            self.assertIn("no-existe.py", str(ctx.exception))
+            self.assertEqual(len(rotos), 1)
+            self.assertIn("no-existe.py", rotos[0].error)
+
+    def test_un_generador_roto_no_oculta_a_los_demas(self) -> None:
+        with tempfile.TemporaryDirectory() as temporal:
+            base = Path(temporal)
+            escribir_generador(base, "sano", ["informe"])
+            roto = base / "roto"
+            roto.mkdir()
+            (roto / gu.NOMBRE_MANIFIESTO).write_text("{ no es json", encoding="utf-8")
+
+            validos, rotos = gu.descubrir_todos(base)
+
+            self.assertEqual([g.nombre for g in validos], ["sano"])
+            self.assertEqual(len(rotos), 1)
+            self.assertIn("manifiesto inválido", rotos[0].error)
+
+    def test_descubrir_saltea_los_rotos(self) -> None:
+        with tempfile.TemporaryDirectory() as temporal:
+            base = Path(temporal)
+            escribir_generador(base, "sano", ["informe"])
+            roto = base / "roto"
+            roto.mkdir()
+            (roto / gu.NOMBRE_MANIFIESTO).write_text("{}", encoding="utf-8")
+
+            self.assertEqual([g.nombre for g in gu.descubrir(base)], ["sano"])
 
     def test_directorio_inexistente_no_falla(self) -> None:
         self.assertEqual(gu.descubrir(Path("no-existe-esta-carpeta")), [])
@@ -206,7 +252,7 @@ class TestPayloadDelGenerador(unittest.TestCase):
         bloques = [{"tipo": "parrafo", "texto": "ACME S.A.C."}]
         indice = [{"texto": "Resumen", "pagina": 1}]
 
-        payload = gu.construir_payload(
+        payload = gu.construir_payload_generador(
             self.spec, self.datos, bloques, indice, "usuario/entregables/word/x.docx", {"anio": "2026"}
         )
 
@@ -219,7 +265,7 @@ class TestPayloadDelGenerador(unittest.TestCase):
         self.assertEqual(payload["constantes"], {"anio": "2026"})
 
     def test_el_payload_no_lleva_rutas_absolutas(self) -> None:
-        payload = gu.construir_payload(
+        payload = gu.construir_payload_generador(
             self.spec, self.datos, [], [], "usuario/entregables/word/x.docx"
         )
 
@@ -229,7 +275,7 @@ class TestPayloadDelGenerador(unittest.TestCase):
 
     def test_una_salida_absoluta_se_rechaza(self) -> None:
         with self.assertRaises(ValueError):
-            gu.construir_payload(self.spec, self.datos, [], [], "C:/tmp/x.docx")
+            gu.construir_payload_generador(self.spec, self.datos, [], [], "C:/tmp/x.docx")
 
 
 class TestEjecucionDelGenerador(unittest.TestCase):
@@ -279,6 +325,42 @@ class TestEjecucionDelGenerador(unittest.TestCase):
             gu.ejecutar(generador, self._payload(), raiz=self.base)
 
         self.assertIn("no produjo un archivo válido", str(ctx.exception))
+
+    def test_un_generador_que_se_cuelga_falla_con_error_de_tiempo(self) -> None:
+        escribir_generador(self.base, "lento", ["informe"], script=SCRIPT_LENTO)
+        generador = gu.cargar(self.base / "lento")
+
+        with self.assertRaises(ValueError) as ctx:
+            gu.ejecutar(generador, self._payload(), raiz=self.base, timeout=1)
+
+        self.assertIn("superó el límite", str(ctx.exception))
+
+    def test_un_interprete_inexistente_falla_con_mensaje_claro(self) -> None:
+        escribir_generador(
+            self.base,
+            "sinejecutable",
+            ["informe"],
+            manifiesto_extra={"comando": ["interprete-que-no-existe-xyz"]},
+        )
+        generador = gu.cargar(self.base / "sinejecutable")
+
+        with self.assertRaises(ValueError) as ctx:
+            gu.ejecutar(generador, self._payload(), raiz=self.base)
+
+        self.assertIn("no se pudo ejecutar", str(ctx.exception))
+        self.assertIn("interprete-que-no-existe-xyz", str(ctx.exception))
+
+    def test_un_generador_que_falla_despues_de_escribir_no_deja_archivo_parcial(self) -> None:
+        escribir_generador(
+            self.base, "parcial", ["informe"], script=SCRIPT_ESCRIBE_Y_FALLA
+        )
+        generador = gu.cargar(self.base / "parcial")
+        salida = self.base / "usuario/entregables/word/x.docx"
+
+        with self.assertRaises(ValueError):
+            gu.ejecutar(generador, self._payload(), raiz=self.base)
+
+        self.assertFalse(salida.exists())
 
 
 class TestMotorConGeneradorPropio(unittest.TestCase):
@@ -365,6 +447,32 @@ class TestMotorConGeneradorPropio(unittest.TestCase):
             motor._elegir_generador(args, "informe")
 
         self.assertIn("no declara el tipo", str(ctx.exception))
+
+    def test_un_generador_fuera_de_la_zona_del_usuario_se_rechaza(self) -> None:
+        carpeta = escribir_generador(self.base / "otro-lugar", "intruso", ["informe"])
+        args = argparse.Namespace(generador=str(carpeta), sin_generador=False)
+
+        with self.assertRaises(ValueError) as ctx:
+            motor._elegir_generador(args, "informe")
+
+        self.assertIn("usuario/generadores", str(ctx.exception))
+
+    def test_un_generador_relativo_se_resuelve_contra_la_raiz(self) -> None:
+        escribir_generador(self.base / "usuario" / "generadores", "mi-plantilla", ["informe"])
+        args = argparse.Namespace(
+            generador="usuario/generadores/mi-plantilla", sin_generador=False
+        )
+
+        generador = motor._elegir_generador(args, "informe")
+
+        self.assertEqual(generador.nombre, "mi-plantilla")
+
+    def test_generador_y_sin_generador_son_excluyentes(self) -> None:
+        with contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                motor.main(
+                    ["--tipo", "informe", "--sin-generador", "--generador", "usuario/generadores/x"]
+                )
 
 
 if __name__ == "__main__":

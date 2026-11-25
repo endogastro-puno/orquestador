@@ -26,20 +26,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="resultado como JSON")
     args = parser.parse_args(argv)
 
-    try:
-        generadores = gu.descubrir()
-    except ValueError as error:
-        if args.json:
-            print(json.dumps({"ok": False, "error": str(error)}, ensure_ascii=False))
-        else:
-            print(f"ERROR: {error}", file=sys.stderr)
-        return 1
+    validos, rotos = gu.descubrir_todos()
+
+    def relativa(ruta: Path) -> str:
+        try:
+            return ruta.relative_to(gu.RAIZ).as_posix()
+        except ValueError:
+            return ruta.as_posix()
 
     if args.json:
         print(
             json.dumps(
                 {
-                    "ok": True,
+                    "ok": not rotos,
                     "generadores": [
                         {
                             "nombre": g.nombre,
@@ -47,18 +46,21 @@ def main(argv: list[str] | None = None) -> int:
                             "script": g.script.name,
                             "comando": list(g.comando),
                             "descripcion": g.descripcion,
-                            "carpeta": g.carpeta.as_posix(),
+                            "carpeta": relativa(g.carpeta),
                         }
-                        for g in generadores
+                        for g in validos
+                    ],
+                    "rotos": [
+                        {"carpeta": relativa(r.carpeta), "error": r.error} for r in rotos
                     ],
                 },
                 ensure_ascii=False,
             )
         )
-        return 0
+        return 1 if rotos else 0
 
-    if not generadores:
-        print(f"No hay generadores propios en {gu.DIR_GENERADORES.as_posix()}.")
+    if not validos and not rotos:
+        print(f"No hay generadores propios en {relativa(gu.DIR_GENERADORES)}.")
         print(
             "Si querés usar tu propia plantilla como código, creá una carpeta con "
             "un manifiesto 'generador.json' y tu script. "
@@ -66,15 +68,28 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0
 
-    print(f"Generadores propios del usuario ({gu.DIR_GENERADORES.as_posix()}):\n")
-    for g in generadores:
-        print(f"  {g.nombre}")
-        if g.descripcion:
-            print(f"    {g.descripcion}")
-        print(f"    tipos    : {', '.join(g.tipos)}")
-        print(f"    script   : {g.script.name}  ({' '.join(g.comando)})")
-        print(f"    carpeta  : {g.carpeta.as_posix()}")
-        print()
+    if validos:
+        print(f"Generadores propios del usuario ({relativa(gu.DIR_GENERADORES)}):\n")
+        for g in validos:
+            print(f"  {g.nombre}")
+            if g.descripcion:
+                print(f"    {g.descripcion}")
+            print(f"    tipos    : {', '.join(g.tipos)}")
+            print(f"    script   : {g.script.name}  ({' '.join(g.comando)})")
+            print(f"    carpeta  : {relativa(g.carpeta)}")
+            print()
+
+    if rotos:
+        print(f"Generadores con manifiesto inválido ({len(rotos)}):\n")
+        for roto in rotos:
+            print(f"  [ROTO] {relativa(roto.carpeta)}")
+            print(f"    {roto.error}")
+            print()
+        print(
+            "Los generadores rotos no bloquean la generación de otros tipos, "
+            "pero ese generador no va a usarse hasta corregir su manifiesto."
+        )
+        return 1
     return 0
 
 
