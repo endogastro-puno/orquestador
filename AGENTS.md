@@ -37,6 +37,7 @@ convención de estilo.
 | `usuario/datos/entrada/` | **Sólo lectura** | Insumos crudos: Excel, PDF, texto |
 | `usuario/plantillas/propias/` | **Sólo lectura** | Precedencia máxima al generar |
 | `usuario/plantillas/oficiales/` | **Sólo lectura** | Membretes y formatos de la organización |
+| `usuario/generadores/` | **Sólo lectura y ejecución** | Plantilla del usuario escrita en código (Python o JS). Se ejecuta como subproceso; nunca se edita |
 | `usuario/recursos/logos/` | **Sólo lectura** | Se insertan tal cual, sin recortar ni recolorear |
 | `usuario/recursos/firmas/` | **Sólo lectura** | Imágenes de firma |
 | `usuario/entregables/` | **Crear archivos nuevos** | Nunca editar ni borrar uno existente sin pedido explícito |
@@ -60,12 +61,14 @@ Detalle completo en `herramientas/docs/limites.md`.
 | `usuario/datos/` | Fuente de datos real del usuario | usuario |
 | `usuario/plantillas/propias/` | Plantillas del usuario (máxima precedencia) | usuario |
 | `usuario/plantillas/oficiales/` | Membretes y formatos de la organización | usuario |
+| `usuario/generadores/` | Plantilla del usuario escrita en código (Python o JS) | usuario |
 | `usuario/recursos/logos/` · `firmas/` | Identidad visual y firmas | usuario |
 | `usuario/entregables/word/` `pdf/` `excel/` `markdown/` `borradores/` | Salidas | usuario |
 | `herramientas/contratos/` | Contratos `*.example` de la fuente de datos | nosotros |
 | `herramientas/scripts/` | Inicialización, validación, rutas y verificación de límites | nosotros |
 | `herramientas/tests/` | Pruebas de regresión (sólo biblioteca estándar) | nosotros |
 | `herramientas/docs/` | Catálogo de tipos, flujo de trabajo y límites de zona | nosotros |
+| `herramientas/ejemplos/` | Ejemplo de generador propio del usuario | nosotros |
 | `INSTALACION.md` | Qué instalar para que el repositorio funcione | nosotros |
 | `.opencode/skills/` | Skills instaladas | nosotros |
 | `odd/` | Registro de decisiones de desarrollo | nosotros |
@@ -123,13 +126,20 @@ Reglas:
 
 Orden fijo, sin excepciones:
 
-1. `usuario/plantillas/propias/<tipo>-*` — la plantilla propia del usuario. **Gana siempre.**
-2. `usuario/plantillas/oficiales/<tipo>-*` — formato oficial del tipo.
-3. Membretes declarados en `entidad.csv` (`membrete_word`, `membrete_excel`).
-4. Formato por defecto: sobrio, corporativo, sin sobrecarga visual.
+1. `usuario/generadores/<nombre>/` — la plantilla del usuario escrita en código
+   (Python o JS). **Gana siempre.** Es código suyo: el motor lo ejecuta como
+   subproceso, nunca lo importa y nunca lo modifica. Contrato en
+   `herramientas/docs/contrato-generador.md`.
+2. `usuario/plantillas/propias/<tipo>-*` — la plantilla propia del usuario.
+3. `usuario/plantillas/oficiales/<tipo>-*` — formato oficial del tipo.
+4. Membretes declarados en `entidad.csv` (`membrete_word`, `membrete_excel`).
+5. Formato por defecto: sobrio, corporativo, sin sobrecarga visual.
 
 Se trabaja sobre una **copia**. La plantilla original nunca se modifica. Convención de
 nombres: `<tipo-de-documento>-<variante>.<ext>`.
+
+Cuando hay generador propio, el motor sigue siendo dueño del **contenido** (resuelve
+placeholders, valida `PENDIENTE`, expande tablas) y el generador aplica el **formato**.
 
 ## Tipos de documento
 
@@ -204,6 +214,7 @@ Cerrá cada cambio de código con su línea de riesgo (`Risk: ...`) cuando corre
 | `herramientas/scripts/verificar_entorno.py` | Comprueba que el entorno tenga instalado lo que cada formato necesita |
 | `herramientas/scripts/instalar_todo.py` | Instala lo que falte: `--plan` muestra, `--si` ejecuta. Windows |
 | `herramientas/scripts/generar_documento.py` | Genera un documento desde `herramientas/contratos/tipos/<tipo>.json` y los CSV |
+| `herramientas/scripts/listar_generadores.py` | Lista los generadores propios del usuario en `usuario/generadores/` |
 
 Detalle y reglas para scripts nuevos en `herramientas/scripts/README.md`.
 Qué instalar en la máquina: `INSTALACION.md`.
@@ -247,6 +258,9 @@ Reglas:
 
 - Modificar, renombrar, mover o borrar cualquier cosa dentro de `usuario/`, salvo crear
   entregables nuevos en `usuario/entregables/`.
+- Modificar el código de `usuario/generadores/`: es del usuario. Se ejecuta, se lee y
+  se depura desde afuera; si falla, se le muestra el error y se propone el arreglo,
+  pero no se edita su archivo.
 - Completar los `PENDIENTE` de `usuario/datos/`: eso lo hace el usuario.
 - Inventar, estimar o «completar» datos que la fuente no tiene.
 - Guardar un documento fuera de `usuario/entregables/` o dejar archivos sueltos en la raíz.

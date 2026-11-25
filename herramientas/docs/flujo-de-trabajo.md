@@ -4,7 +4,7 @@ Pipeline obligatorio para producir cualquier documento. Los pasos 1 a 3 son
 obligatorios y verificables; los pasos 4 a 7 son la ejecución.
 
 ```text
-usuario/datos/  →  usuario/plantillas/  →  redacción  →  generación  →  verificación  →  entrega
+usuario/datos/  →  usuario/generadores/  →  usuario/plantillas/  →  redacción  →  generación  →  verificación  →  entrega
 ```
 
 Recordá la frontera: todo lo que se lee vive en `usuario/`, y en `usuario/` sólo se
@@ -39,12 +39,20 @@ agente tampoco lo completa con el valor correcto: **el dato lo escribe el usuari
 
 Orden fijo (ver `herramientas/docs/limites.md`):
 
-1. `usuario/plantillas/propias/<tipo>-*`
-2. `usuario/plantillas/oficiales/<tipo>-*`
-3. Membretes declarados en `usuario/datos/organizacion/entidad.csv`
-4. Formato por defecto del agente
+1. `usuario/generadores/<nombre>/` — generador propio del usuario, si declara el
+   tipo. Es código suyo: se ejecuta, no se edita. Contrato completo en
+   `herramientas/docs/contrato-generador.md`.
+2. `usuario/plantillas/propias/<tipo>-*`
+3. `usuario/plantillas/oficiales/<tipo>-*`
+4. Membretes declarados en `usuario/datos/organizacion/entidad.csv`
+5. Formato por defecto del motor
 
 Se trabaja siempre sobre una **copia**. La plantilla original no se toca.
+
+Si el usuario tiene un generador propio, el motor resuelve el contenido y se lo
+entrega ya resuelto: el generador aplica sólo el formato. Con
+`python herramientas/scripts/listar_generadores.py` se ve qué generadores hay y
+qué tipos cubren.
 
 ## Paso 4 — Redactar
 
@@ -111,6 +119,7 @@ En la respuesta final se informa:
 | El tipo de documento no está en el catálogo | Propone el tipo más cercano y confirma antes de generar |
 | El formato pedido no admite el contenido | Avisa y propone alternativa (por ejemplo tabla → `.xlsx`) |
 | El nombre de archivo ya existe | Usa la versión `-v2` que propone el script; no sobrescribe |
+| El generador propio del usuario falla | Se muestra su error textual; no se edita su código. Se propone el arreglo y el usuario decide |
 
 ## Bitácora de entregables
 
