@@ -1,0 +1,28 @@
+clave,valor,descripcion
+razon_social,PENDIENTE,Razón social completa tal como figura en SUNAT
+nombre_comercial,PENDIENTE,Nombre de fantasía usado en documentos y membretes
+ruc,PENDIENTE,11 dígitos sin guiones ni espacios
+tipo_contribuyente,PENDIENTE,persona_natural o persona_juridica
+regimen_tributario,PENDIENTE,Régimen tributario vigente (por ejemplo RUC general)
+inicio_actividades,PENDIENTE,Fecha AAAA-MM-DD de inicio de actividades
+partida_registral,PENDIENTE,Partida registral de la constitución si aplica
+direccion,PENDIENTE,Dirección del domicilio fiscal
+distrito,PENDIENTE,Distrito del domicilio fiscal
+provincia,PENDIENTE,Provincia del domicilio fiscal
+departamento,PENDIENTE,Departamento del domicilio fiscal
+pais,PENDIENTE,País del domicilio fiscal
+referencia_domicilio,PENDIENTE,Referencia de ubicación para documentos con dirección extendida
+telefono,PENDIENTE,Teléfono fijo con código de área
+celular,PENDIENTE,Celular de contacto institucional
+correo,PENDIENTE,Correo institucional
+sitio_web,PENDIENTE,Sitio web o red social oficial
+horario_atencion,PENDIENTE,Horario de atención al público en texto libre
+color_primario,PENDIENTE,Color corporativo principal en formato #RRGGBB
+color_secundario,PENDIENTE,Color corporativo secundario en formato #RRGGBB
+tipografia,PENDIENTE,Tipografía corporativa usada en los documentos
+logo_principal,PENDIENTE,Ruta relativa dentro de recursos/ del logo principal
+logo_secundario,PENDIENTE,Ruta relativa dentro de recursos/ del logo secundario
+membrete_word,PENDIENTE,Ruta relativa dentro de plantillas/ del membrete para Word
+membrete_excel,PENDIENTE,Ruta relativa dentro de plantillas/ del membrete para Excel
+pie_de_pagina,PENDIENTE,Texto de pie de página institucional
+actualizado,PENDIENTE,Fecha AAAA-MM-DD de la última revisión de este archivo
