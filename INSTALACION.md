@@ -338,6 +338,8 @@ python herramientas/scripts/validar_datos.py --estricto
 | `Cannot find module 'docx'` | El script generador está fuera del repositorio; el `npm install` no lo alcanza | Mové el script dentro del repositorio, o definí `NODE_PATH` apuntando a `node_modules`. |
 | `no matching distribution found` al instalar `pandas` | La versión de Python es más nueva que los binarios disponibles | Creá un venv con `py -3.12 -m venv .venv`. |
 | `pip` no se reconoce | Python no está en el `PATH` | Reabrí la terminal; si sigue, reinstalá marcando «Add Python to PATH». |
+| `python` abre una versión vieja (`3.7`, `3.8`) | En Windows el `PATH` puede tener otra instalación primero | Usá el lanzador: `py -3 herramientas/scripts/...`. El repositorio necesita Python 3.10+. |
+| `Fatal Python error: init_import_site: Failed to import the site module` | Hay una variable `PYTHONHOME` apuntando a otra instalación de Python | Borrala de la sesión: `Remove-Item Env:PYTHONHOME` (PowerShell) o `unset PYTHONHOME`. El motor ya la quita al ejecutar tu generador. |
 | Excel muestra fórmulas en vez de valores | No se recalculó el libro | Necesitás LibreOffice: la skill lo usa para calcular sobre una copia. |
 | `PermissionError` al abrir un archivo generado | El archivo está abierto en Word/Excel | Cerrá el archivo y volvé a generar. |
 | Aparece `LibreOffice 26.x` y `Press Enter to continue...` | Alguien ejecutó `soffice --version` a mano: el lanzador de consola imprime la versión y espera un Enter | Apretá Enter. No es un error. El verificador ya no ejecuta LibreOffice: sólo comprueba que exista. |
@@ -347,9 +349,15 @@ python herramientas/scripts/validar_datos.py --estricto
 
 - **Dependencias para los scripts del repositorio.** `init_local.py`,
   `validar_datos.py`, `nuevo_entregable.py`, `verificar_limites.py`,
-  `verificar_entorno.py` e `instalar_todo.py` usan sólo la biblioteca estándar de
-  Python 3.10+. Funcionan con `pip` vacío.
-- **`python-docx`.** No se usa, ver la aclaración de arriba.
+  `verificar_entorno.py`, `instalar_todo.py`, `generar_documento.py`, `selftest.py`
+  y `leer_documento.py` usan sólo la biblioteca estándar de Python 3.10+. Funcionan
+  con `pip` vacío.
+  Excepción: leer un **PDF** necesita `pdfplumber` o `pypdf`, y leer un **Excel**
+  necesita `openpyxl` — ambas ya vienen en `requirements.txt`. Un `.docx`, un `.csv`
+  o un `.md` se leen sin instalar nada.
+- **`python-docx` para el motor.** El motor y el renderizador de Word no lo usan.
+  Lo usan los generadores propios del usuario (el ejemplo incluido) y el generador
+  de demostración; por eso está en `requirements.txt`.
 - **Microsoft Word o Excel.** Qué programa de oficina uses es indiferente: LibreOffice
   se instala sólo para las conversiones y no reemplaza nada.
 - **Una base de datos, Docker o un servidor.** Todo es local.
@@ -373,4 +381,6 @@ Programas del sistema: Pandoc  ·  LibreOffice  ·  Poppler  (+ Tesseract opcion
 Verificar:             python herramientas/scripts/verificar_entorno.py
 Instalar lo que falta: python herramientas/scripts/instalar_todo.py --si
 Preparar tu zona:      python herramientas/scripts/init_local.py
+¿Funciona acá?:        python herramientas/scripts/selftest.py
+Leer un insumo:        python herramientas/scripts/leer_documento.py <archivo>
 ```

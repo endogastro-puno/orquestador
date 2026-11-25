@@ -1,5 +1,7 @@
 # Orquestador Documental — EndoGastro Puno
 
+[![CI](https://github.com/endogastro-puno/orquestador/actions/workflows/ci.yml/badge.svg)](https://github.com/endogastro-puno/orquestador/actions/workflows/ci.yml)
+
 Repositorio de trabajo para generar documentos administrativos con OpenCode:
 **Word**, **PDF**, **Markdown** y **Excel**, a partir de una fuente de datos canónica y
 de plantillas propias o oficiales.
@@ -141,6 +143,7 @@ orquestador/
     │   ├── limites.md              # la frontera, en detalle
     │   ├── tipos-de-documento.md   # 10 tipos con datos obligatorios y esqueletos
     │   ├── flujo-de-trabajo.md     # pipeline de 7 pasos
+    │   ├── lectura-de-documentos.md # leer Word, PDF, Excel y texto
     │   └── contrato-generador.md   # cómo se usa tu plantilla escrita en código
     ├── ejemplos/                   # ejemplo de generador propio
     └── scripts/
@@ -148,7 +151,9 @@ orquestador/
         ├── validar_datos.py        # valida tus datos contra los contratos
         ├── nuevo_entregable.py     # resuelve la ruta con la convención de nombres
         ├── verificar_limites.py    # comprueba que la frontera se respete
+        ├── leer_documento.py       # lee Word, PDF, Excel, CSV y texto
         ├── listar_generadores.py   # lista tu plantilla en código, si tenés una
+        ├── selftest.py             # prueba de humo: ¿el motor funciona acá?
         └── verificar_entorno.py    # comprueba que el entorno tenga todo instalado
 ```
 

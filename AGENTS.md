@@ -67,7 +67,7 @@ Detalle completo en `herramientas/docs/limites.md`.
 | `herramientas/contratos/` | Contratos `*.example` de la fuente de datos | nosotros |
 | `herramientas/scripts/` | Inicialización, validación, rutas y verificación de límites | nosotros |
 | `herramientas/tests/` | Pruebas de regresión (sólo biblioteca estándar) | nosotros |
-| `herramientas/docs/` | Catálogo de tipos, flujo de trabajo y límites de zona | nosotros |
+| `herramientas/docs/` | Catálogo de tipos, flujo, límites de zona y lectura de documentos | nosotros |
 | `herramientas/ejemplos/` | Ejemplo de generador propio del usuario | nosotros |
 | `INSTALACION.md` | Qué instalar para que el repositorio funcione | nosotros |
 | `.opencode/skills/` | Skills instaladas | nosotros |
@@ -85,6 +85,9 @@ Detalle completo en `herramientas/docs/flujo-de-trabajo.md`. Resumen:
 2. **Validar la fuente**: `python herramientas/scripts/validar_datos.py`. Si hay
    errores, no se redacta; se informa qué falta. Si hay `PENDIENTE` en campos que el
    documento usa, se pregunta por esos campos y se detiene.
+   Si el pedido trae insumos (Word, PDF, Excel) en `usuario/datos/entrada/`, se leen
+   con `python herramientas/scripts/leer_documento.py <archivo> --json`. Un insumo que
+   no se leyó no se usa: no se resume de memoria.
 3. **Resolver la plantilla** con la precedencia de la sección siguiente.
 4. **Redactar** con el esqueleto del tipo y con `internal-comms` o `doc-coauthoring`.
 5. **Generar** con la skill correspondiente sobre la ruta que devuelve
@@ -215,6 +218,8 @@ Cerrá cada cambio de código con su línea de riesgo (`Risk: ...`) cuando corre
 | `herramientas/scripts/instalar_todo.py` | Instala lo que falte: `--plan` muestra, `--si` ejecuta. Windows |
 | `herramientas/scripts/generar_documento.py` | Genera un documento desde `herramientas/contratos/tipos/<tipo>.json` y los CSV |
 | `herramientas/scripts/listar_generadores.py` | Lista los generadores propios del usuario en `usuario/generadores/` |
+| `herramientas/scripts/leer_documento.py` | Lee `.docx`, `.pdf`, `.xlsx`, `.csv`, `.md`, `.txt` y devuelve texto y estructura |
+| `herramientas/scripts/selftest.py` | Prueba de humo del motor en un temporal; no toca `usuario/` |
 
 Detalle y reglas para scripts nuevos en `herramientas/scripts/README.md`.
 Qué instalar en la máquina: `INSTALACION.md`.

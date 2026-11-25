@@ -13,6 +13,8 @@ nunca modifican lo que el usuario ya tiene.**
 | `instalar_todo.py` | Instala lo que falte (Windows, `winget` + pip + npm) | **No escribe nada** |
 | `generar_documento.py` | Genera `.docx` desde un spec declarativo y los CSV | Crea un entregable nuevo; **nunca sobrescribe**. `--salida` se rechaza si el archivo existe o queda fuera de `usuario/entregables/` |
 | `listar_generadores.py` | Lista los generadores propios del usuario y los tipos que cubren | **No escribe nada**. Sólo lee `usuario/generadores/` |
+| `leer_documento.py` | Lee `.docx`, `.pdf`, `.xlsx`, `.csv`, `.md` y `.txt`; devuelve texto y estructura | **No escribe nada**. Sólo lee |
+| `selftest.py` | Prueba de humo: genera un documento en un temporal y comprueba el motor | **No escribe nada** en el repositorio |
 
 `renderizar_docx.js` es el único renderizador de Word: recibe un payload JSON ya
 resuelto y no contiene datos de empresa. `generar_documento.py` es el que resuelve
@@ -42,7 +44,12 @@ python -m unittest discover -s herramientas/tests -v
 ```
 
 Sólo biblioteca estándar: no hace falta instalar `pytest` ni nada más. Cubren la
-detección de NVM, el trato de los requisitos opcionales y el contrato del verificador.
+detección de NVM, el trato de los requisitos opcionales, el contrato del
+verificador, el motor, los generadores propios y los lectores de documentos. Las
+pruebas de `.pdf` y `.xlsx` se saltean solas si falta la dependencia del formato.
+
+En Windows, si `python` apunta a una versión vieja, usá el lanzador: `py -3`.
+El repositorio necesita **Python 3.10 o superior**.
 
 ## Uso rápido
 
@@ -64,6 +71,11 @@ python herramientas/scripts/nuevo_entregable.py --selftest
 python herramientas/scripts/listar_generadores.py
 python herramientas/scripts/generar_documento.py --tipo manual
 python herramientas/scripts/generar_documento.py --tipo manual --sin-generador
+
+python herramientas/scripts/leer_documento.py usuario/datos/entrada/informe.docx --json
+python herramientas/scripts/leer_documento.py planilla.xlsx --texto
+
+python herramientas/scripts/selftest.py
 ```
 
 Códigos de salida: `0` correcto, `1` error. Esto permite encadenarlos en el flujo sin
