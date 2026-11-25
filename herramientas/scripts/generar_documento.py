@@ -359,8 +359,20 @@ def _elegir_generador(args: argparse.Namespace, tipo: str) -> gu.Generador | Non
     """Decide si el documento se produce con un generador propio del usuario."""
     if getattr(args, "sin_generador", False):
         return None
+    zona = (RAIZ / "usuario" / "generadores").resolve()
     if args.generador:
-        generador = gu.cargar(Path(args.generador))
+        carpeta = Path(args.generador)
+        if not carpeta.is_absolute():
+            carpeta = RAIZ / carpeta
+        carpeta = carpeta.resolve()
+        try:
+            carpeta.relative_to(zona)
+        except ValueError:
+            raise ValueError(
+                "un generador sólo se ejecuta desde usuario/generadores/: "
+                f"{carpeta} está fuera de la zona del usuario"
+            ) from None
+        generador = gu.cargar(carpeta)
         if not (generador.cubre(tipo) or generador.cubre_todo()):
             declarados = ", ".join(generador.tipos) or "ninguno"
             raise ValueError(
@@ -368,7 +380,7 @@ def _elegir_generador(args: argparse.Namespace, tipo: str) -> gu.Generador | Non
                 f"(declara: {declarados})"
             )
         return generador
-    return gu.seleccionar(gu.descubrir(RAIZ / "usuario" / "generadores"), tipo)
+    return gu.seleccionar(gu.descubrir(zona), tipo)
 
 
 def _renderizar_con_docx(payload: dict[str, Any], salida: Path) -> None:
@@ -414,11 +426,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--nombre", help="override del nombre del entregable")
     parser.add_argument("--fecha", help="fecha AAAA-MM-DD (por defecto, hoy)")
     parser.add_argument("--salida", help="ruta nueva dentro de usuario/entregables/")
-    parser.add_argument(
+    eleccion = parser.add_mutually_exclusive_group()
+    eleccion.add_argument(
         "--generador",
-        help="carpeta del generador propio del usuario (por defecto: el que declare el tipo)",
+        help=(
+            "carpeta del generador propio del usuario, relativa a la raíz o absoluta "
+            "(por defecto: el que declare el tipo)"
+        ),
     )
-    parser.add_argument(
+    eleccion.add_argument(
         "--sin-generador",
         action="store_true",
         help="ignora los generadores propios del usuario y usa el renderizador genérico",
@@ -444,7 +460,7 @@ def main(argv: list[str] | None = None) -> int:
 
         generador = _elegir_generador(args, spec["tipo"])
         if generador is not None:
-            payload = gu.construir_payload(
+            payload = gu.construir_payload_generador(
                 spec,
                 datos,
                 bloques,

@@ -24,8 +24,9 @@ subproceso). El contrato, en detalle, está en
 `herramientas/docs/contrato-generador.md`.
 
 Los scripts de Python usan sólo la biblioteca estándar de Python 3.10+, salvo
-`generar_informe_ejecutivo.py`, que usa `python-docx`. Las skills de generación
-documental sí necesitan dependencias: ver `INSTALACION.md` en la raíz.
+`generar_informe_ejecutivo.py` y los generadores propios del usuario (el ejemplo
+incluido), que usan `python-docx` — declarado en `requirements.txt`. Las skills de
+generación documental sí necesitan más dependencias: ver `INSTALACION.md` en la raíz.
 
 `entorno_windows.py` no es un script sino un módulo compartido: expone
 `refrescar_path()`, que relee el `PATH` del registro de Windows. Lo usan

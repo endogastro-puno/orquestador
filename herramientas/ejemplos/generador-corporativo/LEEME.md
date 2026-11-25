@@ -15,10 +15,12 @@ generador de verdad vive en `usuario/generadores/`, que es zona del usuario.
    `tipos`. Con `"tipos": ["*"]` el generador se aplica a **todos** los tipos de
    documento; con `"tipos": ["informe", "manual"]` sólo a esos.
 
-3. Instalá la dependencia del ejemplo (si vas a usar Python):
+3. Asegurate de tener la dependencia del ejemplo. `python-docx` ya está en
+   `requirements.txt`; si te falta:
 
    ```bash
-   python -m pip install python-docx
+   python -m pip install -r requirements.txt
+   # o, sólo esta:  python -m pip install python-docx
    ```
 
 4. Comprobá que el motor lo detecta:

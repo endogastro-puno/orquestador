@@ -93,3 +93,25 @@ pase a ser del proyecto.
   el chequeo de `PENDIENTE` del ejemplo no mira el encabezado.
 - **L9** (2026-11-25) — Rama publicada: `origin/feature/generadores-usuario` (3 commits).
   PR sin abrir: lo decide el usuario.
+- **L10** (2026-11-25, verbatim) — "ok, corrije". Se corrigieron los seis hallazgos
+  reales de **L8** más las inconsistencias de documentación:
+  1. `descubrir_todos()` aísla el descubrimiento: un `generador.json` roto se reporta
+     como `GeneradorRoto` y no bloquea los demás tipos; `listar_generadores.py` los
+     muestra y sale con código `1`.
+  2. `subprocess.TimeoutExpired` y `OSError` se mapean a `ValueError` con mensaje claro.
+  3. `--generador` se resuelve contra la raíz del repositorio y es mutuamente excluyente
+     con `--sin-generador` (`add_mutually_exclusive_group`).
+  4. Sólo se ejecuta código dentro de `usuario/generadores/`; `--generador` fuera de la
+     zona se rechaza.
+  5. Si el generador falla después de escribir, se descarta el archivo parcial; nunca se
+     toca uno preexistente.
+  6. El ejemplo revisa `PENDIENTE` también en encabezado y pie, falla con tablas sin
+     encabezado o con más celdas que columnas, y reporta el logo que no pudo insertar.
+  7. Documentación: precedencia aclarada (el motor implementa los pasos 1 y 5; los pasos
+     2-4 son convención del agente), ambigüedad del `"*"` explícita, límites de zona,
+     tiempo y salida parcial documentados, y `python-docx` con un solo relato.
+  8. `construir_payload` del contrato pasa a `construir_payload_generador` para no
+     confundirse con el payload del renderizador.
+  Verificación: 61 pruebas en verde; corrida end-to-end en temporal con el generador
+  propio (`.docx` 36 844 bytes) y con `--sin-generador` (`.docx` 11 077 bytes); una
+  tabla irregular ya falla con error claro en vez de recortar datos.

@@ -25,12 +25,18 @@ Cuando el motor genera un documento, el formato se resuelve en este orden:
 4. Membrete declarado en `usuario/datos/organizacion/entidad.csv`.
 5. Formato por defecto del motor (`renderizar_docx.js`).
 
+Ojo con quién implementa cada paso: **el motor implementa el paso 1 y el 5**. O
+usa tu generador, o usa el renderizador genérico. Los pasos 2 a 4 son convención
+de redacción del agente (ver `herramientas/docs/flujo-de-trabajo.md`): el motor
+declarativo no abre plantillas binarias ni lee el membrete.
+
 El motor **siempre** resuelve el contenido (placeholders, tablas, bloques
 repetidos, índice, `PENDIENTE`). El generador propio aplica **el formato**:
 membrete, tipografía, color, sellos, firmas, encabezados.
 
-Si dos generadores declaran el mismo tipo, el motor falla y lo dice: la
-ambigüedad se reporta, no se resuelve en silencio.
+Si dos generadores declaran el mismo tipo explícito, o si dos declaran sólo
+`"*"`, el motor falla y lo dice: la ambigüedad se reporta, no se resuelve en
+silencio.
 
 ## El manifiesto `generador.json`
 
@@ -54,10 +60,14 @@ ambigüedad se reporta, no se resuelve en silencio.
 
 Reglas del manifiesto:
 
-- Un tipo explícito gana sobre `"*"`. Si dos generadores declaran el **mismo**
-  tipo explícito, el motor falla.
+- Un tipo explícito gana sobre `"*"`. La ambigüedad falla sólo si dos
+  generadores declaran el **mismo** tipo explícito, o si dos declaran `"*"`.
 - `script` no puede ser absoluto ni salir de la carpeta del generador.
 - El manifiesto se lee con `utf-8-sig`: un BOM de Windows no lo rompe.
+- **Un manifiesto roto no rompe el resto.** Si un `generador.json` es inválido,
+  ese generador se saltea y se reporta; los demás tipos se siguen generando con
+  el renderizador genérico. `listar_generadores.py` muestra los rotos con su
+  error y sale con código `1`.
 
 ## El payload
 
@@ -128,6 +138,17 @@ El motor corre el generador así:
 El generador se ejecuta como **subproceso**: el motor nunca lo importa. Un
 error del generador del usuario no rompe el motor genérico.
 
+Límites que pone el motor:
+
+- **Zona**: sólo se ejecuta código que viva dentro de `usuario/generadores/`.
+  `--generador` acepta una ruta relativa a la raíz del repositorio (o absoluta),
+  pero si apunta fuera de esa carpeta el motor la rechaza.
+- **Tiempo**: 180 segundos. Al vencerlo, el motor corta el proceso y reporta el
+  error; no queda un `.docx` a medias.
+- **Salida parcial**: si el generador falla después de escribir, el motor borra
+  ese archivo. Nunca toca un entregable que ya existía: la ruta destino se
+  valida como nueva antes de ejecutar.
+
 ## Ejemplo mínimo
 
 ```python
@@ -149,7 +170,8 @@ print(f"OK {salida}")
 
 Un ejemplo completo y funcional —con identidad visual, membrete, logo, pie con
 número de página y control de `PENDIENTE`— está en
-`herramientas/ejemplos/generador-corporativo/`.
+`herramientas/ejemplos/generador-corporativo/`. Usa `python-docx`, que ya está
+declarado en `requirements.txt`.
 
 ## Reglas del generador
 
@@ -177,7 +199,10 @@ python herramientas/scripts/generar_documento.py --tipo manual --generador usuar
 - `--sin-generador` ignora los generadores propios y usa el renderizador
   genérico.
 - `--generador <carpeta>` fuerza uno concreto; si no declara el tipo, el motor
-  falla en vez de adivinar.
+  falla en vez de adivinar. La ruta se resuelve contra la raíz del repositorio,
+  así que funciona igual desde cualquier directorio.
+- `--generador` y `--sin-generador` son excluyentes: si pedís las dos, el
+  comando falla en vez de descartar una en silencio.
 
 ## Zona y privacidad
 

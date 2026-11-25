@@ -91,12 +91,17 @@ def agregar_membrete(seccion, payload: dict) -> None:
     encabezado = seccion.header.paragraphs[0]
     encabezado.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 
-    logos = sorted(Path("usuario/recursos/logos").glob("*"))
+    formatos = {".png", ".jpg", ".jpeg", ".gif", ".bmp"}
+    logos = sorted(
+        ruta
+        for ruta in Path("usuario/recursos/logos").glob("*")
+        if ruta.is_file() and ruta.suffix.lower() in formatos
+    )
     if logos:
         try:
             encabezado.add_run().add_picture(str(logos[0]), height=Cm(1.2))
-        except Exception:  # pragma: no cover - un logo inválido no debe frenar el documento
-            pass
+        except Exception as error:  # pragma: no cover - un logo inválido no frena el documento
+            print(f"AVISO: no se pudo insertar el logo {logos[0]}: {error}", file=sys.stderr)
 
     nombre = entidad.get("nombre_comercial") or entidad.get("razon_social")
     if nombre:
@@ -154,7 +159,13 @@ def render_bloques(documento: Document, payload: dict) -> None:
             encabezado = bloque.get("encabezado", [])
             filas = bloque.get("filas", [])
             if not encabezado:
-                continue
+                raise SystemExit("tabla sin encabezado en el payload: no se puede renderizar")
+            for fila in filas:
+                if len(fila) > len(encabezado):
+                    raise SystemExit(
+                        "tabla con más celdas que columnas: "
+                        f"{len(fila)} valores para {len(encabezado)} columnas"
+                    )
             tabla = documento.add_table(rows=1, cols=len(encabezado))
             tabla.style = "Table Grid"
             for indice, titulo in enumerate(encabezado):
@@ -165,7 +176,7 @@ def render_bloques(documento: Document, payload: dict) -> None:
                     corrida.bold = True
             for indice, fila in enumerate(filas):
                 celdas = tabla.add_row().cells
-                for posicion, valor in enumerate(fila[: len(encabezado)]):
+                for posicion, valor in enumerate(fila):
                     celdas[posicion].text = str(valor)
                     if indice % 2 == 1:
                         sombrear(celdas[posicion], GRIS_HEX)
@@ -204,19 +215,35 @@ def render_bloques(documento: Document, payload: dict) -> None:
             raise SystemExit(f"bloque desconocido en el payload: {tipo}")
 
 
-def verificar_sin_pendientes(documento: Document) -> None:
-    """El generador no puede dejar un PENDIENTE en el documento final."""
+def textos_del_documento(documento: Document):
+    """Recorre todo el texto: cuerpo, tablas, encabezados y pies.
+
+    El encabezado y el pie también llevan datos del usuario (membrete, razón
+    social), así que el control de PENDIENTE no puede mirar sólo el cuerpo.
+    """
     for parrafo in documento.paragraphs:
-        if "PENDIENTE" in parrafo.text.upper():
-            raise SystemExit(
-                "el documento contiene un valor PENDIENTE: "
-                f"{parrafo.text.strip()[:80]}"
-            )
+        yield parrafo.text
     for tabla in documento.tables:
         for fila in tabla.rows:
             for celda in fila.cells:
-                if "PENDIENTE" in celda.text.upper():
-                    raise SystemExit("el documento contiene un valor PENDIENTE en una tabla")
+                yield celda.text
+    for seccion in documento.sections:
+        for contenedor in (seccion.header, seccion.footer):
+            for parrafo in contenedor.paragraphs:
+                yield parrafo.text
+            for tabla in contenedor.tables:
+                for fila in tabla.rows:
+                    for celda in fila.cells:
+                        yield celda.text
+
+
+def verificar_sin_pendientes(documento: Document) -> None:
+    """El generador no puede dejar un PENDIENTE en el documento final."""
+    for texto in textos_del_documento(documento):
+        if "PENDIENTE" in texto.upper():
+            raise SystemExit(
+                "el documento contiene un valor PENDIENTE: " f"{texto.strip()[:80]}"
+            )
 
 
 def main(argv: list[str] | None = None) -> int:
