@@ -31,6 +31,9 @@ Contrato de salida (`--json`):
 
 Las claves que no aplican al formato no aparecen. `texto` es la versión plana,
 lista para buscar o pasar a otro comando.
+
+Códigos de salida: ``0`` leyó y devolvió texto, ``2`` leyó pero no hay texto
+extraíble (PDF escaneado, con el aviso en la salida de error), ``1`` error.
 """
 
 from __future__ import annotations
@@ -275,32 +278,43 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
 
+    aviso = resultado.get("aviso")
+
+    # Un solo lugar aplica el recorte: si se duplicara por rama, --texto podría
+    # ignorar --max-caracteres sin que nadie lo note.
+    texto = resultado["texto"]
+    recortado = False
+    if args.max_caracteres > 0 and len(texto) > args.max_caracteres:
+        texto = texto[: args.max_caracteres]
+        recortado = True
+
     if args.json:
-        if args.max_caracteres > 0 and len(resultado["texto"]) > args.max_caracteres:
-            resultado["texto"] = resultado["texto"][: args.max_caracteres]
+        resultado["texto"] = texto
+        if recortado:
             resultado["truncado"] = True
         print(json.dumps(resultado, ensure_ascii=False, indent=2))
-        return 0
-
-    if args.texto:
-        print(resultado["texto"])
-        return 0
-
-    print(f"{resultado['formato'].upper()}  {resultado['ruta']}  ({resultado['bytes']} bytes)")
-    for clave, valor in resultado.get("metadatos", {}).items():
-        print(f"  {clave}: {valor}")
-    if "paginas" in resultado:
-        print(f"  páginas: {len(resultado['paginas'])}")
-    if "hojas" in resultado:
-        print(f"  hojas: {', '.join(hoja['nombre'] for hoja in resultado['hojas'])}")
-    if "parrafos" in resultado:
-        print(f"  párrafos: {len(resultado['parrafos'])}  tablas: {len(resultado['tablas'])}")
-
-    texto = resultado["texto"]
-    if args.max_caracteres > 0 and len(texto) > args.max_caracteres:
-        print(f"\n{texto[: args.max_caracteres]}\n[... texto recortado; usá --texto para verlo completo]")
+    elif args.texto:
+        print(texto)
     else:
+        print(f"{resultado['formato'].upper()}  {resultado['ruta']}  ({resultado['bytes']} bytes)")
+        for clave, valor in resultado.get("metadatos", {}).items():
+            print(f"  {clave}: {valor}")
+        if "paginas" in resultado:
+            print(f"  páginas: {len(resultado['paginas'])}")
+        if "hojas" in resultado:
+            print(f"  hojas: {', '.join(hoja['nombre'] for hoja in resultado['hojas'])}")
+        if "parrafos" in resultado:
+            print(f"  párrafos: {len(resultado['parrafos'])}  tablas: {len(resultado['tablas'])}")
         print(f"\n{texto}")
+        if recortado:
+            print(
+                f"[... texto recortado a {args.max_caracteres} caracteres; "
+                "subí --max-caracteres o usá --texto para verlo completo]"
+            )
+
+    if aviso:
+        print(f"AVISO: {aviso}", file=sys.stderr)
+        return 2
     return 0
 
 

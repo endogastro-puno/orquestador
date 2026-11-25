@@ -201,6 +201,17 @@ class TestCliLectura(BaseTemporal):
         self.assertEqual(codigo, 0)
         self.assertEqual(salida.getvalue().strip(), "contenido")
 
+    def test_texto_plano_respeta_max_caracteres(self) -> None:
+        ruta = self.base / "nota.txt"
+        ruta.write_text("x" * 100, encoding="utf-8")
+        salida = io.StringIO()
+
+        with contextlib.redirect_stdout(salida):
+            codigo = lector.main([str(ruta), "--texto", "--max-caracteres", "7"])
+
+        self.assertEqual(codigo, 0)
+        self.assertEqual(salida.getvalue().strip(), "x" * 7)
+
 
 @unittest.skipUnless(
     __import__("importlib").util.find_spec("openpyxl") is not None, "falta openpyxl"
@@ -241,6 +252,39 @@ class TestPdf(BaseTemporal):
         self.assertEqual(resultado["formato"], "pdf")
         self.assertEqual(len(resultado["paginas"]), 1)
         self.assertIn("Contrato de prueba", resultado["paginas"][0]["texto"])
+
+
+@unittest.skipUnless(
+    __import__("importlib").util.find_spec("reportlab") is not None, "falta reportlab"
+)
+class TestPdfSinTexto(BaseTemporal):
+    def _pdf_vacio(self) -> Path:
+        from reportlab.pdfgen import canvas
+
+        ruta = self.base / "escaneado.pdf"
+        lienzo = canvas.Canvas(str(ruta))
+        lienzo.showPage()  # página sin texto: simula un escaneo
+        lienzo.save()
+        return ruta
+
+    def test_avisa_y_sale_con_codigo_2_en_json(self) -> None:
+        salida = io.StringIO()
+        with contextlib.redirect_stdout(salida), contextlib.redirect_stderr(io.StringIO()):
+            codigo = lector.main([str(self._pdf_vacio()), "--json"])
+
+        payload = json.loads(salida.getvalue())
+        self.assertEqual(codigo, 2)
+        self.assertIn("escaneado", payload["aviso"])
+
+    def test_avisa_en_modo_humano_y_en_texto(self) -> None:
+        for extra in ([], ["--texto"]):
+            with self.subTest(extra=extra):
+                error = io.StringIO()
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(error):
+                    codigo = lector.main([str(self._pdf_vacio()), *extra])
+
+                self.assertEqual(codigo, 2)
+                self.assertIn("AVISO", error.getvalue())
 
 
 class TestSelftest(unittest.TestCase):

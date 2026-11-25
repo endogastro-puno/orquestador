@@ -31,9 +31,15 @@ python herramientas/scripts/leer_documento.py nota.md --max-caracteres 500
 | --- | --- |
 | `--json` | Salida completa y estructurada, para que la use un agente o un script. |
 | `--texto` | Sólo el texto plano, para buscar o encadenar. |
-| `--max-caracteres N` | Recorta el texto de la salida humana (y de la JSON, si la pedís). |
+| `--max-caracteres N` | Recorta el texto en **todos** los modos: humano, `--texto` y `--json` (ahí agrega `truncado: true`). |
 
-Códigos de salida: `0` leyó bien, `1` error (con el motivo en la salida de error).
+Códigos de salida:
+
+| Código | Significado |
+| --- | --- |
+| `0` | Leyó y devolvió texto. |
+| `2` | Leyó, pero **no hay texto extraíble** (PDF escaneado). El aviso va a la salida de error. |
+| `1` | Error: no existe, formato no soportado, archivo corrupto o dependencia faltante. |
 
 ## Contrato de salida (`--json`)
 
