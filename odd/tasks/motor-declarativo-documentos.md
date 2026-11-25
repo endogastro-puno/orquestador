@@ -47,3 +47,9 @@ Ruta elegida: inline. No hay dos unidades paralelas independientes ni presión d
 **L4** — Verificación previa: 11 tipos declarados, 0 generadores versionados. El MOF se generó con un JS de ~600 líneas en `%TEMP%` con datos incrustados. Ese es el patrón que se elimina.
 
 **L5** — CodeGraph inicializado en el repo (no había `.codegraph/`).
+
+**L6** — T5 verificado: Plan Operativo de KILOCLINIC generado por el motor (`acc12fd`), 9 páginas, índice coincidente con las páginas reales (2, 4, 5, 6, 7, 8, 9), total de presupuesto 456,000.00 / 93,500.00, cero marcadores `PENDIENTE`/`{{`/`TODO`. 26 tests verdes. `verificar_limites.py` OK. Entregable no versionado.
+
+**L7** — Defecto corregido durante T5: las tablas estáticas sobrescribían sus filas ya resueltas con las originales, dejando `{{anio}}` visible en el documento. Regresión agregada al test. Segundo ajuste cosmético en el spec: cabecera «Presupuestado» se partía en dos líneas; se redistribuyeron anchos.
+
+**L8** — Revisión nativa RDD: evaluación `high` (1226 líneas, `process_boundary` por subprocess). Usuario consintió «Revisar este cambio». Los cuatro lentes devolvieron `opencode_review_transport_relay_refused (reason: provider_failed)`; el STATUS de la misma línea reofrece los mismos slots. Sin captura admitida: no hay PASS de revisión que reportar.
