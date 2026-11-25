@@ -1,0 +1,7 @@
+{
+  "nombre": "corporativo",
+  "descripcion": "Ejemplo de plantilla corporativa: aplica identidad visual a cualquier tipo de documento.",
+  "tipos": ["*"],
+  "script": "generador.py",
+  "comando": ["python"]
+}

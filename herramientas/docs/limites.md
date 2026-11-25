@@ -30,6 +30,7 @@ Nunca lo escribe, lo deduce ni lo inventa.
 | `usuario/datos/entrada/` | **Sólo lectura** | Insumos crudos: Excel, PDF, texto |
 | `usuario/plantillas/propias/` | **Sólo lectura** | Precedencia máxima al generar |
 | `usuario/plantillas/oficiales/` | **Sólo lectura** | Membretes y formatos de la organización |
+| `usuario/generadores/` | **Sólo lectura** | Código del usuario: su plantilla escrita en Python o JS. Se ejecuta, no se edita |
 | `usuario/recursos/logos/` | **Sólo lectura** | Se insertan tal cual, sin recortar ni recolorear |
 | `usuario/recursos/firmas/` | **Sólo lectura** | Imágenes de firma |
 | `usuario/entregables/` | **Crear archivos nuevos** | Nunca editar ni borrar uno existente sin pedido explícito |
@@ -101,6 +102,7 @@ usuario/
 ├── plantillas/
 │   ├── propias/               # plantillas del usuario (ganan siempre)
 │   └── oficiales/             # membretes y formatos de la organización
+├── generadores/               # plantilla del usuario escrita en código (Python o JS)
 ├── recursos/
 │   ├── logos/                 # logos e isotipos
 │   └── firmas/                # imágenes de firma
@@ -117,11 +119,16 @@ usuario/
 Al generar un documento, el orden de búsqueda es fijo:
 
 ```text
-usuario/plantillas/propias/<tipo>-*      ← gana siempre
+usuario/generadores/<nombre>/             ← gana siempre: plantilla del usuario en código
+usuario/plantillas/propias/<tipo>-*
 usuario/plantillas/oficiales/<tipo>-*
 membrete declarado en entidad.csv
-formato por defecto del agente
+formato por defecto del motor
 ```
+
+El generador propio del usuario se ejecuta como subproceso y nunca se importa:
+el motor no depende de ese código. El contrato está en
+`herramientas/docs/contrato-generador.md`.
 
 Se trabaja siempre sobre una **copia**. La plantilla original nunca se modifica.
 

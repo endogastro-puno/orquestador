@@ -11,12 +11,18 @@ Reglas que no se negocian:
   ``--datos``). Nunca se inventan ni se completan valores ``PENDIENTE``.
 * Este archivo no contiene ningún dato de empresa.
 * La salida se resuelve con ``nuevo_entregable.resolver``: nunca sobrescribe.
+* Si el usuario tiene un generador propio en ``usuario/generadores/`` que
+  declara el tipo, el motor resuelve el contenido y se lo entrega para que
+  aplique su formato. Si no hay generador propio, se usa el renderizador
+  genérico. Ver ``herramientas/docs/contrato-generador.md``.
 
 Uso::
 
     python herramientas/scripts/generar_documento.py --tipo plan-operativo
     python herramientas/scripts/generar_documento.py --tipo manual \\
         --datos ruta/a/datos --salida ruta/entregable.docx --json
+    python herramientas/scripts/generar_documento.py --tipo informe \\
+        --sin-generador
 """
 
 from __future__ import annotations
@@ -37,6 +43,7 @@ DIR_SPECS = RAIZ / "herramientas" / "contratos" / "tipos"
 RENDERIZADOR = RAIZ / "herramientas" / "scripts" / "renderizar_docx.js"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import generadores_usuario as gu  # noqa: E402
 from nuevo_entregable import resolver  # noqa: E402
 
 PLACEHOLDER = re.compile(r"\{\{\s*([\w.]+)\s*\}\}")
@@ -50,7 +57,7 @@ def cargar_spec(tipo: str) -> dict[str, Any]:
     ruta = DIR_SPECS / f"{clave}.json"
     if not ruta.is_file():
         raise ValueError(f"tipo desconocido '{tipo}': no existe {ruta.relative_to(RAIZ).as_posix()}")
-    with ruta.open("r", encoding="utf-8") as archivo:
+    with ruta.open("r", encoding="utf-8-sig") as archivo:
         spec = json.load(archivo)
     if spec.get("tipo") != clave:
         raise ValueError(f"{ruta.name}: el campo 'tipo' debe ser '{clave}'")
@@ -348,6 +355,58 @@ def _anio(fecha: str | None) -> str:
     return str(date.today().year)
 
 
+def _elegir_generador(args: argparse.Namespace, tipo: str) -> gu.Generador | None:
+    """Decide si el documento se produce con un generador propio del usuario."""
+    if getattr(args, "sin_generador", False):
+        return None
+    if args.generador:
+        generador = gu.cargar(Path(args.generador))
+        if not (generador.cubre(tipo) or generador.cubre_todo()):
+            declarados = ", ".join(generador.tipos) or "ninguno"
+            raise ValueError(
+                f"el generador '{generador.nombre}' no declara el tipo '{tipo}' "
+                f"(declara: {declarados})"
+            )
+        return generador
+    return gu.seleccionar(gu.descubrir(RAIZ / "usuario" / "generadores"), tipo)
+
+
+def _renderizar_con_docx(payload: dict[str, Any], salida: Path) -> None:
+    """Renderiza el payload con el renderizador genérico (Node + docx)."""
+    if not RENDERIZADOR.is_file():
+        raise ValueError(f"falta el renderizador {RENDERIZADOR.relative_to(RAIZ).as_posix()}")
+    with tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", suffix=".json", delete=False
+    ) as temporal:
+        json.dump(payload, temporal, ensure_ascii=False)
+        ruta_payload = temporal.name
+
+    entorno = os.environ.copy()
+    nodos = RAIZ / "node_modules"
+    entorno["NODE_PATH"] = str(nodos) + (
+        os.pathsep + entorno["NODE_PATH"] if entorno.get("NODE_PATH") else ""
+    )
+    try:
+        resultado = subprocess.run(
+            ["node", str(RENDERIZADOR), ruta_payload, str(salida)],
+            cwd=RAIZ,
+            env=entorno,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            stdin=subprocess.DEVNULL,
+            timeout=TIEMPO_LIMITE,
+        )
+    finally:
+        Path(ruta_payload).unlink(missing_ok=True)
+
+    if resultado.returncode != 0:
+        raise ValueError(f"renderizador falló: {resultado.stderr.strip() or resultado.stdout.strip()}")
+    if not salida.is_file() or salida.stat().st_size == 0:
+        raise ValueError(f"el renderizador no produjo un archivo válido en {salida.name}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--tipo", required=True, help="nombre de la spec en herramientas/contratos/tipos/")
@@ -355,6 +414,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--nombre", help="override del nombre del entregable")
     parser.add_argument("--fecha", help="fecha AAAA-MM-DD (por defecto, hoy)")
     parser.add_argument("--salida", help="ruta nueva dentro de usuario/entregables/")
+    parser.add_argument(
+        "--generador",
+        help="carpeta del generador propio del usuario (por defecto: el que declare el tipo)",
+    )
+    parser.add_argument(
+        "--sin-generador",
+        action="store_true",
+        help="ignora los generadores propios del usuario y usa el renderizador genérico",
+    )
     parser.add_argument("--json", action="store_true", help="resultado como JSON")
     args = parser.parse_args(argv)
 
@@ -366,7 +434,6 @@ def main(argv: list[str] | None = None) -> int:
         constantes.setdefault("anio", _anio(args.fecha))
         bloques = expandir(spec["bloques"], datos, constantes)
         indice = calcular_indice(bloques)
-        payload = construir_payload(spec, datos, indice, bloques)
 
         if args.salida:
             salida = _validar_salida(Path(args.salida))
@@ -375,38 +442,24 @@ def main(argv: list[str] | None = None) -> int:
             salida = resolver("word", nombre, args.fecha)
         salida.parent.mkdir(parents=True, exist_ok=True)
 
-        if not RENDERIZADOR.is_file():
-            raise ValueError(f"falta el renderizador {RENDERIZADOR.relative_to(RAIZ).as_posix()}")
-        with tempfile.NamedTemporaryFile(
-            "w", encoding="utf-8", suffix=".json", delete=False
-        ) as temporal:
-            json.dump(payload, temporal, ensure_ascii=False)
-            ruta_payload = temporal.name
-
-        entorno = os.environ.copy()
-        nodos = RAIZ / "node_modules"
-        entorno["NODE_PATH"] = str(nodos) + (
-            os.pathsep + entorno["NODE_PATH"] if entorno.get("NODE_PATH") else ""
-        )
-        try:
-            resultado = subprocess.run(
-                ["node", str(RENDERIZADOR), ruta_payload, str(salida)],
-                cwd=RAIZ,
-                env=entorno,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                stdin=subprocess.DEVNULL,
-                timeout=TIEMPO_LIMITE,
+        generador = _elegir_generador(args, spec["tipo"])
+        if generador is not None:
+            payload = gu.construir_payload(
+                spec,
+                datos,
+                bloques,
+                indice,
+                salida.relative_to(RAIZ).as_posix(),
+                constantes,
             )
-        finally:
-            Path(ruta_payload).unlink(missing_ok=True)
-
-        if resultado.returncode != 0:
-            raise ValueError(f"renderizador falló: {resultado.stderr.strip() or resultado.stdout.strip()}")
-        if not salida.is_file() or salida.stat().st_size == 0:
-            raise ValueError(f"el renderizador no produjo un archivo válido en {salida.name}")
+            gu.ejecutar(generador, payload, raiz=RAIZ)
+            motor_usado = "generador-usuario"
+            generador_usado: str | None = generador.nombre
+        else:
+            payload = construir_payload(spec, datos, indice, bloques)
+            _renderizar_con_docx(payload, salida)
+            motor_usado = "renderizador-docx"
+            generador_usado = None
     except (
         ValueError,
         IndexError,
@@ -427,6 +480,8 @@ def main(argv: list[str] | None = None) -> int:
                 {
                     "ok": True,
                     "tipo": spec["tipo"],
+                    "motor": motor_usado,
+                    "generador": generador_usado,
                     "salida": str(salida),
                     "bytes": salida.stat().st_size,
                     "paginas_indexadas": len(indice),
@@ -436,7 +491,11 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
     else:
-        print(f"OK {salida.relative_to(RAIZ).as_posix()} ({salida.stat().st_size} bytes)")
+        detalle = f" · generador '{generador_usado}'" if generador_usado else ""
+        print(
+            f"OK {salida.relative_to(RAIZ).as_posix()} "
+            f"({salida.stat().st_size} bytes){detalle}"
+        )
     return 0
 
 

@@ -33,6 +33,10 @@ defusedxml
 lxml
 validators
 
+# Generación de .docx desde Python. La usan los generadores propios del usuario
+# (usuario/generadores/); el motor genérico no la necesita.
+python-docx
+
 
 # --- .xlsx (skill `xlsx`) ---------------------------------------------------
 # openpyxl: edición por celda. pandas: lectura/escritura masiva.

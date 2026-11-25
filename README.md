@@ -28,6 +28,8 @@ orquestador/
 Reglas de la frontera:
 
 - `usuario/datos/`, `usuario/plantillas/`, `usuario/recursos/` → **sólo lectura**.
+- `usuario/generadores/` → **sólo lectura y ejecución**: es tu plantilla escrita en
+  código. El motor la corre; no la modifica.
 - `usuario/entregables/` → se crean archivos **nuevos**; nunca se sobrescribe ni se borra.
 - Los valores `PENDIENTE` los completa el usuario. El agente pregunta, no rellena.
 
@@ -42,6 +44,31 @@ Detalle completo en [`herramientas/docs/limites.md`](herramientas/docs/limites.m
 ## La idea en una línea
 
 > El agente no inventa: lee `usuario/datos/`, aplica la plantilla y escribe en `usuario/entregables/`.
+
+## Tu plantilla, escrita en código
+
+Si querés que **todos** tus documentos salgan con tu propia plantilla, podés
+escribirla como código —Python o JavaScript— y dejarla en tu zona:
+
+```text
+usuario/generadores/corporativo/
+  generador.json    # qué tipos cubre y cómo se ejecuta
+  generador.py      # tu código
+```
+
+```bash
+python herramientas/scripts/listar_generadores.py
+python herramientas/scripts/generar_documento.py --tipo manual
+```
+
+El motor sigue siendo dueño del contenido (resuelve los datos y valida que no
+queden `PENDIENTE`); tu código aplica el formato: membrete, tipografía, color,
+sellos y firmas.
+
+Es **tu** código: nunca se sube a git, nunca lo modificamos y nunca lo
+importamos — lo ejecutamos como proceso aparte, así que un error tuyo no rompe
+el motor. Contrato completo:
+[`herramientas/docs/contrato-generador.md`](herramientas/docs/contrato-generador.md).
 
 ## Requisitos
 
@@ -101,6 +128,7 @@ orquestador/
 │   ├── plantillas/
 │   │   ├── propias/                # tus plantillas (ganan siempre)
 │   │   └── oficiales/              # membretes y formatos de la organización
+│   ├── generadores/                # tu plantilla escrita en código (Python o JS)
 │   ├── recursos/
 │   │   ├── logos/                  # logos e isotipos
 │   │   └── firmas/                 # imágenes de firma
@@ -112,12 +140,15 @@ orquestador/
     ├── docs/
     │   ├── limites.md              # la frontera, en detalle
     │   ├── tipos-de-documento.md   # 10 tipos con datos obligatorios y esqueletos
-    │   └── flujo-de-trabajo.md     # pipeline de 7 pasos
+    │   ├── flujo-de-trabajo.md     # pipeline de 7 pasos
+    │   └── contrato-generador.md   # cómo se usa tu plantilla escrita en código
+    ├── ejemplos/                   # ejemplo de generador propio
     └── scripts/
         ├── init_local.py           # crea tu estructura y tus datos
         ├── validar_datos.py        # valida tus datos contra los contratos
         ├── nuevo_entregable.py     # resuelve la ruta con la convención de nombres
         ├── verificar_limites.py    # comprueba que la frontera se respete
+        ├── listar_generadores.py   # lista tu plantilla en código, si tenés una
         └── verificar_entorno.py    # comprueba que el entorno tenga todo instalado
 ```
 
@@ -125,7 +156,8 @@ orquestador/
 
 1. Identificar el tipo de documento (`herramientas/docs/tipos-de-documento.md`).
 2. Validar la fuente: `python herramientas/scripts/validar_datos.py`.
-3. Resolver la plantilla: `propias/` → `oficiales/` → membrete → formato por defecto.
+3. Resolver la plantilla: tu generador en `usuario/generadores/` → `propias/` →
+   `oficiales/` → membrete → formato por defecto.
 4. Redactar con `internal-comms` o `doc-coauthoring`.
 5. Generar con `docx`, `xlsx`, `pdf` o escritura directa para `.md`.
 6. Verificar con la checklist de `AGENTS.md`.

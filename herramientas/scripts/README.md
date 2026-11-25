@@ -12,12 +12,19 @@ nunca modifican lo que el usuario ya tiene.**
 | `verificar_entorno.py` | Comprueba que estén instaladas las dependencias de cada formato | **No escribe nada** |
 | `instalar_todo.py` | Instala lo que falte (Windows, `winget` + pip + npm) | **No escribe nada** |
 | `generar_documento.py` | Genera `.docx` desde un spec declarativo y los CSV | Crea un entregable nuevo; **nunca sobrescribe**. `--salida` se rechaza si el archivo existe o queda fuera de `usuario/entregables/` |
+| `listar_generadores.py` | Lista los generadores propios del usuario y los tipos que cubren | **No escribe nada**. Sólo lee `usuario/generadores/` |
 
 `renderizar_docx.js` es el único renderizador de Word: recibe un payload JSON ya
 resuelto y no contiene datos de empresa. `generar_documento.py` es el que resuelve
 placeholders, expande tablas y bloques repetidos, calcula el índice y llama al renderer.
 
-Los siete scripts de Python usan sólo la biblioteca estándar de Python 3.10+. Las skills de generación
+`generadores_usuario.py` es un módulo, no un script: implementa el contrato de los
+generadores propios del usuario (descubrimiento, payload, invocación como
+subproceso). El contrato, en detalle, está en
+`herramientas/docs/contrato-generador.md`.
+
+Los scripts de Python usan sólo la biblioteca estándar de Python 3.10+, salvo
+`generar_informe_ejecutivo.py`, que usa `python-docx`. Las skills de generación
 documental sí necesitan dependencias: ver `INSTALACION.md` en la raíz.
 
 `entorno_windows.py` no es un script sino un módulo compartido: expone
@@ -52,6 +59,10 @@ python herramientas/scripts/verificar_limites.py
 python herramientas/scripts/nuevo_entregable.py --tipo word --nombre "Memorándum de horarios"
 python herramientas/scripts/nuevo_entregable.py --tipo excel --nombre "Tarifas 2026" --json
 python herramientas/scripts/nuevo_entregable.py --selftest
+
+python herramientas/scripts/listar_generadores.py
+python herramientas/scripts/generar_documento.py --tipo manual
+python herramientas/scripts/generar_documento.py --tipo manual --sin-generador
 ```
 
 Códigos de salida: `0` correcto, `1` error. Esto permite encadenarlos en el flujo sin
@@ -59,8 +70,10 @@ interpretar texto.
 
 ## Reglas para scripts nuevos
 
-1. **Nunca escribir en `usuario/datos/`, `usuario/plantillas/` ni `usuario/recursos/`.**
+1. **Nunca escribir en `usuario/datos/`, `usuario/plantillas/`, `usuario/recursos/` ni
+   `usuario/generadores/`.**
    Es la regla que define este repositorio; un script que la rompe es un defecto.
+   En `usuario/generadores/` el agente sólo **ejecuta** el código del usuario.
 2. Sólo biblioteca estándar, salvo que la tarea lo justifique; en ese caso se agrega la
    dependencia a `requirements.txt`.
 3. Sin rutas absolutas ni datos incrustados: todo se lee de los contratos, de
