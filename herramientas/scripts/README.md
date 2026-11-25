@@ -11,7 +11,7 @@ nunca modifican lo que el usuario ya tiene.**
 | `verificar_limites.py` | Comprueba que nada de `usuario/` esté versionado | **No escribe nada** |
 | `verificar_entorno.py` | Comprueba que estén instaladas las dependencias de cada formato | **No escribe nada** |
 | `instalar_todo.py` | Instala lo que falte (Windows, `winget` + pip + npm) | **No escribe nada** |
-| `generar_documento.py` | Genera `.docx` desde un spec declarativo y los CSV | Crea un entregable nuevo; **nunca sobrescribe** |
+| `generar_documento.py` | Genera `.docx` desde un spec declarativo y los CSV | Crea un entregable nuevo; **nunca sobrescribe**. `--salida` se rechaza si el archivo existe o queda fuera de `usuario/entregables/` |
 
 `renderizar_docx.js` es el único renderizador de Word: recibe un payload JSON ya
 resuelto y no contiene datos de empresa. `generar_documento.py` es el que resuelve

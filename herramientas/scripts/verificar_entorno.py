@@ -76,6 +76,7 @@ BINARIOS = {
 }
 
 MODULOS = {
+    "docx": "python-docx",
     "PIL": "Pillow",
     "defusedxml": "defusedxml",
     "lxml": "lxml",
@@ -95,6 +96,7 @@ FORMATOS = {
         ("bin", "node"),
         ("bin", "npm"),
         ("npm", "docx"),
+        ("mod", "docx"),
         ("bin", "pandoc"),
         ("bin", "soffice"),
         ("mod", "defusedxml"),

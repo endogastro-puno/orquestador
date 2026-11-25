@@ -181,5 +181,73 @@ class TestSalidaSinSobrescribir(unittest.TestCase):
         self.assertEqual(segunda.name, "2026-11-25_plan-operativo-kiloclinic-v2.docx")
 
 
+class TestProteccionDeSalida(unittest.TestCase):
+    def test_salida_existente_se_rechaza_sin_sobrescribir(self) -> None:
+        destino = RAIZ / "usuario" / "entregables" / "word" / "_prueba_no_sobrescribir.docx"
+        destino.write_text("original", encoding="utf-8")
+        try:
+            with self.assertRaises(ValueError) as ctx:
+                motor._validar_salida(destino)
+            self.assertIn("no se sobrescribe", str(ctx.exception))
+            self.assertEqual(destino.read_text(encoding="utf-8"), "original")
+        finally:
+            destino.unlink(missing_ok=True)
+
+    def test_salida_fuera_de_entregables_se_rechaza(self) -> None:
+        with tempfile.TemporaryDirectory() as temporal:
+            with self.assertRaises(ValueError) as ctx:
+                motor._validar_salida(Path(temporal) / "x.docx")
+        self.assertIn("usuario/entregables", str(ctx.exception))
+
+
+class TestDatosInvalidos(unittest.TestCase):
+    def test_totales_con_fila_corta_es_valueerror_no_indexerror(self) -> None:
+        datos = {
+            "partidas": {
+                "cabecera": ["codigo", "presupuestado"],
+                "filas": [["P-001"], ["P-002", "10.00"]],
+            }
+        }
+        bloque = {
+            "tipo": "tabla",
+            "fuente": "partidas",
+            "columnas": ["codigo", "presupuestado"],
+            "totales": ["presupuestado"],
+        }
+        with self.assertRaises(ValueError) as ctx:
+            motor._filas_tabla(bloque, datos)
+        self.assertIn("faltan columnas", str(ctx.exception))
+
+    def test_pendiente_en_tabla_csv_falla(self) -> None:
+        datos = {
+            "actividades": {
+                "cabecera": ["codigo", "actividad"],
+                "filas": [["ACT-001", "PENDIENTE"]],
+            }
+        }
+        bloque = {
+            "tipo": "tabla",
+            "fuente": "actividades",
+            "columnas": ["codigo", "actividad"],
+        }
+        with self.assertRaises(ValueError) as ctx:
+            motor._filas_tabla(bloque, datos)
+        self.assertIn("PENDIENTE", str(ctx.exception))
+
+    def test_repetir_sin_filas_falla(self) -> None:
+        datos = {"puestos": {"cabecera": ["codigo_puesto"], "filas": []}}
+        with self.assertRaises(ValueError) as ctx:
+            motor.expandir([{"tipo": "repetir", "fuente": "puestos", "bloques": []}], datos)
+        self.assertIn("no tiene filas", str(ctx.exception))
+
+
+class TestPeriodo(unittest.TestCase):
+    def test_anio_sale_de_la_fecha_pedida(self) -> None:
+        self.assertEqual(motor._anio("2026-11-25"), "2026")
+
+    def test_anio_sin_fecha_no_falla(self) -> None:
+        self.assertRegex(motor._anio(None), r"^\d{4}$")
+
+
 if __name__ == "__main__":
     unittest.main()

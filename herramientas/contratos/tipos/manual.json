@@ -5,8 +5,7 @@
   "nombre_entregable": "Manual de Organización y Funciones {empresa}",
   "datos": {
     "entidad": "organizacion/entidad.csv",
-    "puestos": "organizacion/puestos.csv",
-    "firmantes": "organizacion/firmantes.csv"
+    "puestos": "organizacion/puestos.csv"
   },
   "constantes": {},
   "bloques": [

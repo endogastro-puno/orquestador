@@ -128,23 +128,16 @@ function parrafo(texto, opciones = {}) {
 }
 
 function titulo(texto, nivel) {
+  // El tamaño, la negrita y el color viven sólo en styles.default.*; repetirlos
+  // acá crea dos fuentes de verdad que pueden divergir.
   const niveles = {
     1: HeadingLevel.HEADING_1,
     2: HeadingLevel.HEADING_2,
     3: HeadingLevel.HEADING_3,
   };
-  const tamanos = { 1: 28, 2: 24, 3: 22 };
   return new Paragraph({
     heading: niveles[nivel] ?? HeadingLevel.HEADING_2,
-    children: [
-      new TextRun({
-        text: String(texto),
-        font: FUENTE,
-        size: tamanos[nivel] ?? 24,
-        bold: true,
-        color: nivel === 3 ? "333333" : AZUL,
-      }),
-    ],
+    children: [new TextRun({ text: String(texto) })],
   });
 }
 

@@ -39,7 +39,7 @@ RENDERIZADOR = RAIZ / "herramientas" / "scripts" / "renderizar_docx.js"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from nuevo_entregable import resolver  # noqa: E402
 
-MARKDOWN = re.compile(r"\{\{\s*([\w.]+)\s*\}\}")
+PLACEHOLDER = re.compile(r"\{\{\s*([\w.]+)\s*\}\}")
 PENDIENTE = "PENDIENTE"
 TIEMPO_LIMITE = 120
 
@@ -129,7 +129,7 @@ def resolver_texto(
             raise ValueError(f"placeholder '{clave}': valor PENDIENTE sin completar")
         return valor
 
-    return MARKDOWN.sub(reemplazar, texto)
+    return PLACEHOLDER.sub(reemplazar, texto)
 
 
 def _resolver_recursivo(
@@ -166,6 +166,13 @@ def _filas_tabla(bloque: dict[str, Any], datos: dict[str, dict[str, Any]]) -> li
         [fila[i] if i < len(fila) else "" for i in indices]
         for fila in tabla["filas"]
     ]
+    for fila in filas:
+        for celda in fila:
+            if PENDIENTE in celda.upper():
+                raise ValueError(
+                    f"tabla '{fuente}': hay un valor PENDIENTE sin completar; "
+                    "el agente no lo completa, lo completa el usuario"
+                )
     totales = bloque.get("totales")
     if totales:
         cabecera = tabla["cabecera"]
@@ -174,16 +181,47 @@ def _filas_tabla(bloque: dict[str, Any], datos: dict[str, dict[str, Any]]) -> li
             if campo not in columnas:
                 raise ValueError(f"totales: '{campo}' no está entre las columnas")
             posicion = columnas.index(campo)
+            indice_campo = cabecera.index(campo)
             suma = 0.0
-            for fila in tabla["filas"]:
-                crudo = fila[cabecera.index(campo)].strip().replace(",", "")
+            for numero, fila in enumerate(tabla["filas"], start=2):
+                if indice_campo >= len(fila):
+                    raise ValueError(
+                        f"tabla '{fuente}':{numero}: faltan columnas para sumar '{campo}'"
+                    )
+                crudo = fila[indice_campo].strip().replace(",", "")
                 try:
                     suma += float(crudo)
                 except ValueError:
-                    raise ValueError(f"totales: '{crudo}' no es numérico en '{campo}'") from None
+                    raise ValueError(
+                        f"totales: '{crudo}' no es numérico en '{campo}' "
+                        f"({fuente}:{numero})"
+                    ) from None
             fila_total[posicion] = f"{suma:,.2f}"
         filas.append(fila_total)
     return filas
+
+
+def _finalizar_tabla(
+    resuelto: dict[str, Any],
+    bloque: dict[str, Any],
+    datos: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Completa una tabla con fuente CSV y quita las claves de expansión."""
+    if resuelto.get("tipo") == "tabla" and bloque.get("fuente"):
+        resuelto["filas"] = _filas_tabla(bloque, datos)
+        for clave in ("fuente", "columnas", "totales"):
+            resuelto.pop(clave, None)
+    return resuelto
+
+
+def _lista_desde(bloque: dict[str, Any], valor: str) -> dict[str, Any]:
+    """Convierte un campo separado por ``|`` en una lista."""
+    separador = bloque.get("separador", "|")
+    return {
+        "tipo": "lista",
+        "items": [parte.strip() for parte in valor.split(separador) if parte.strip()],
+        "numerada": bloque.get("numerada", False),
+    }
 
 
 def expandir(
@@ -202,6 +240,11 @@ def expandir(
             tabla = datos.get(fuente)
             if tabla is None:
                 raise ValueError(f"repetir: fuente desconocida '{fuente}'")
+            if not tabla["filas"]:
+                raise ValueError(
+                    f"repetir: '{fuente}' no tiene filas; el documento quedaría sin "
+                    "las secciones que dependen de esos datos"
+                )
             for indice, fila_cruda in enumerate(tabla["filas"]):
                 fila = {
                     clave: valor.strip()
@@ -215,21 +258,12 @@ def expandir(
             continue
 
         resuelto = _resolver_recursivo(bloque, datos, constantes, None)
-        if resuelto.get("tipo") == "tabla" and bloque.get("fuente"):
-            resuelto["filas"] = _filas_tabla(bloque, datos)
-            resuelto.pop("fuente", None)
-            resuelto.pop("columnas", None)
-            resuelto.pop("totales", None)
         if resuelto.get("tipo") == "lista" and "desde" in resuelto:
             campo = resuelto["desde"]
-            fila = {campo: str(constantes.get(campo, ""))}
             plano = _mapa(datos.get("entidad", {"cabecera": [], "filas": []}))
-            valor = plano.get(campo, fila[campo])
-            separador = resuelto.get("separador", "|")
-            resuelto["items"] = [p.strip() for p in valor.split(separador) if p.strip()]
-            resuelto.pop("desde", None)
-            resuelto.pop("separador", None)
-        resultado.append(resuelto)
+            valor = str(constantes.get(campo, plano.get(campo, "")))
+            resuelto = _lista_desde(bloque, valor)
+        resultado.append(_finalizar_tabla(resuelto, bloque, datos))
     return resultado
 
 
@@ -242,23 +276,10 @@ def _expandir_con_fila(
     resultado: list[dict[str, Any]] = []
     for bloque in bloques:
         if bloque.get("tipo") == "lista" and "desde" in bloque:
-            campo = bloque["desde"]
-            valor = fila.get(campo, "")
-            separador = bloque.get("separador", "|")
-            resuelto = {
-                "tipo": "lista",
-                "items": [p.strip() for p in valor.split(separador) if p.strip()],
-                "numerada": bloque.get("numerada", False),
-            }
-            resultado.append(resuelto)
+            resultado.append(_lista_desde(bloque, fila.get(bloque["desde"], "")))
             continue
         resuelto = _resolver_recursivo(bloque, datos, constantes, fila)
-        if resuelto.get("tipo") == "tabla" and bloque.get("fuente"):
-            resuelto["filas"] = _filas_tabla(bloque, datos)
-            resuelto.pop("fuente", None)
-            resuelto.pop("columnas", None)
-            resuelto.pop("totales", None)
-        resultado.append(resuelto)
+        resultado.append(_finalizar_tabla(resuelto, bloque, datos))
     return resultado
 
 
@@ -300,13 +321,40 @@ def _nombre_entregable(spec: dict[str, Any], datos: dict[str, dict[str, Any]]) -
     return plantilla.replace("{empresa}", empresa)
 
 
+def _validar_salida(ruta: Path) -> Path:
+    """Exige una ruta nueva dentro de usuario/entregables/ y nunca sobrescribe."""
+    entregables = (RAIZ / "usuario" / "entregables").resolve()
+    destino = ruta.resolve()
+    try:
+        destino.relative_to(entregables)
+    except ValueError:
+        raise ValueError(
+            f"--salida debe quedar dentro de usuario/entregables/: {destino}"
+        ) from None
+    if destino.exists():
+        raise ValueError(
+            f"--salida ya existe y no se sobrescribe: {destino.name}. "
+            "Elegí otro nombre o dejá que el motor resuelva la ruta."
+        )
+    return destino
+
+
+def _anio(fecha: str | None) -> str:
+    """Año del periodo, derivado de --fecha o del día actual."""
+    if fecha and re.fullmatch(r"\d{4}-\d{2}-\d{2}", fecha):
+        return fecha[:4]
+    from datetime import date
+
+    return str(date.today().year)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--tipo", required=True, help="nombre de la spec en herramientas/contratos/tipos/")
     parser.add_argument("--datos", help="directorio con la estructura de usuario/datos/")
     parser.add_argument("--nombre", help="override del nombre del entregable")
     parser.add_argument("--fecha", help="fecha AAAA-MM-DD (por defecto, hoy)")
-    parser.add_argument("--salida", help="ruta explícita del .docx (por defecto, usuario/entregables/)")
+    parser.add_argument("--salida", help="ruta nueva dentro de usuario/entregables/")
     parser.add_argument("--json", action="store_true", help="resultado como JSON")
     args = parser.parse_args(argv)
 
@@ -314,12 +362,14 @@ def main(argv: list[str] | None = None) -> int:
         spec = cargar_spec(args.tipo)
         directorio = Path(args.datos).resolve() if args.datos else RAIZ / "usuario" / "datos"
         datos = leer_datos(spec, directorio)
-        bloques = expandir(spec["bloques"], datos, spec.get("constantes", {}))
+        constantes = dict(spec.get("constantes", {}))
+        constantes.setdefault("anio", _anio(args.fecha))
+        bloques = expandir(spec["bloques"], datos, constantes)
         indice = calcular_indice(bloques)
         payload = construir_payload(spec, datos, indice, bloques)
 
         if args.salida:
-            salida = Path(args.salida).resolve()
+            salida = _validar_salida(Path(args.salida))
         else:
             nombre = args.nombre or _nombre_entregable(spec, datos)
             salida = resolver("word", nombre, args.fecha)
@@ -357,7 +407,14 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError(f"renderizador falló: {resultado.stderr.strip() or resultado.stdout.strip()}")
         if not salida.is_file() or salida.stat().st_size == 0:
             raise ValueError(f"el renderizador no produjo un archivo válido en {salida.name}")
-    except (ValueError, OSError, json.JSONDecodeError, subprocess.SubprocessError) as error:
+    except (
+        ValueError,
+        IndexError,
+        KeyError,
+        OSError,
+        json.JSONDecodeError,
+        subprocess.SubprocessError,
+    ) as error:
         if args.json:
             print(json.dumps({"ok": False, "error": str(error)}, ensure_ascii=False))
         else:

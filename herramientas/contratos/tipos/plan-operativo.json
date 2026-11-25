@@ -102,7 +102,5 @@
     ] },
     { "tipo": "firma", "cargo": "Gerencia General", "entidad": "{{entidad.razon_social}}", "texto": "Aprobado el {{entidad.actualizado}}" }
   ],
-  "constantes": {
-    "anio": "2026"
-  }
+  "constantes": {}
 }
