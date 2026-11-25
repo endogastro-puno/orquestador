@@ -1,0 +1,109 @@
+{
+  "tipo": "manual",
+  "titulo": "Manual de Organización y Funciones",
+  "formato": "docx",
+  "nombre_entregable": "Manual de Organización y Funciones {empresa}",
+  "datos": {
+    "entidad": "organizacion/entidad.csv",
+    "puestos": "organizacion/puestos.csv",
+    "firmantes": "organizacion/firmantes.csv"
+  },
+  "constantes": {},
+  "bloques": [
+    {
+      "tipo": "portada",
+      "lineas": [
+        { "texto": "{{entidad.razon_social}}", "tamano": 36, "negrita": true, "color": "1F3864" },
+        { "texto": "RUC {{entidad.ruc}}", "tamano": 22 },
+        { "texto": "{{entidad.direccion}}, {{entidad.distrito}}, {{entidad.departamento}}", "tamano": 22 },
+        { "texto": "", "tamano": 22, "espacio_despues": 1200 },
+        { "texto": "MANUAL DE ORGANIZACIÓN Y FUNCIONES", "tamano": 44, "negrita": true, "color": "1F3864" },
+        { "texto": "(MOF)", "tamano": 28 },
+        { "texto": "", "tamano": 22, "espacio_despues": 900 },
+        { "texto": "Versión 1.0", "tamano": 24 },
+        { "texto": "{{entidad.actualizado}}", "tamano": 24 }
+      ]
+    },
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "Control del documento", "indice": true },
+    {
+      "tipo": "tabla",
+      "encabezado": ["Campo", "Valor"],
+      "anchos": [3000, 6026],
+      "primera_negrita": true,
+      "filas": [
+        ["Versión", "1.0"],
+        ["Elaborado por", "Administración y Finanzas"],
+        ["Revisado por", "Dirección Médica"],
+        ["Aprobado por", "Dirección Médica"],
+        ["Fecha", "{{entidad.actualizado}}"]
+      ]
+    },
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "Contenido" },
+    { "tipo": "indice" },
+    { "tipo": "pagina" },
+
+    { "tipo": "titulo", "nivel": 1, "texto": "I. Objetivo", "indice": true },
+    { "tipo": "parrafo", "texto": "Establecer la estructura orgánica y las funciones, responsabilidades y requisitos de cada puesto de {{entidad.razon_social}}." },
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "II. Alcance", "indice": true },
+    { "tipo": "parrafo", "texto": "El manual es de aplicación obligatoria para todo el personal de {{entidad.razon_social}}, sin distinción de régimen laboral." },
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "III. Base legal", "indice": true },
+    { "tipo": "lista", "items": ["Ley N.º 26842, Ley General de Salud.", "Ley N.º 29783, Ley de Seguridad y Salud en el Trabajo."] },
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "IV. Definiciones", "indice": true },
+    { "tipo": "lista", "items": ["Órgano: unidad de la estructura orgánica con una función institucional.", "Puesto: conjunto de funciones asignadas a una persona."] },
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "V. Misión, visión y valores", "indice": true },
+    { "tipo": "parrafo", "texto": "Brindar atención de calidad con trato respetuoso a cada paciente y su familia." },
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "VI. Estructura orgánica", "indice": true },
+    {
+      "tipo": "tabla",
+      "fuente": "puestos",
+      "encabezado": ["Código", "Denominación", "Área", "Depende de"],
+      "columnas": ["codigo_puesto", "denominacion", "area", "depende_de"],
+      "anchos": [1400, 2800, 2400, 2426],
+      "encabezado_azul": true
+    },
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "VII. Funciones generales por órgano", "indice": true },
+    { "tipo": "parrafo", "texto": "Cada área responde por las funciones que el manual le asigna y por la correcta ejecución de sus procesos." },
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "VIII. Descripción de puestos", "indice": true },
+    { "tipo": "parrafo", "texto": "Se describen todos los puestos declarados. Cada ficha es la referencia oficial de funciones y requisitos." },
+    { "tipo": "pagina" },
+    {
+      "tipo": "repetir",
+      "fuente": "puestos",
+      "por_pagina": true,
+      "bloques": [
+        { "tipo": "titulo", "nivel": 2, "texto": "{{codigo_puesto}} — {{denominacion}}", "indice": true },
+        {
+          "tipo": "tabla",
+          "encabezado": ["Campo", "Valor"],
+          "anchos": [2600, 6426],
+          "primera_negrita": true,
+          "filas": [
+            ["Área", "{{area}}"],
+            ["Depende de", "{{depende_de}}"],
+            ["Supervisa", "{{supervisa}}"],
+            ["Nivel", "{{nivel}}"]
+          ]
+        },
+        { "tipo": "titulo", "nivel": 3, "texto": "Objetivo del puesto" },
+        { "tipo": "parrafo", "texto": "{{objetivo}}" },
+        { "tipo": "titulo", "nivel": 3, "texto": "Funciones" },
+        { "tipo": "lista", "desde": "funciones", "separador": "|", "numerada": true },
+        { "tipo": "titulo", "nivel": 3, "texto": "Requisitos" },
+        { "tipo": "lista", "desde": "requisitos", "separador": "|" }
+      ]
+    },
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "IX. Disposiciones finales", "indice": true },
+    { "tipo": "numerada", "items": ["El manual entra en vigencia desde su aprobación.", "Toda modificación requiere una nueva versión aprobada."] },
+    { "tipo": "firma", "cargo": "Dirección Médica", "entidad": "{{entidad.razon_social}}", "texto": "Aprobado el {{entidad.actualizado}}" }
+  ]
+}

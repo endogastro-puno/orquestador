@@ -1,0 +1,108 @@
+{
+  "tipo": "plan-operativo",
+  "titulo": "Plan Operativo y Presupuesto",
+  "formato": "docx",
+  "nombre_entregable": "Plan Operativo y Presupuesto {empresa}",
+  "datos": {
+    "entidad": "organizacion/entidad.csv",
+    "actividades": "tablas/actividades.csv",
+    "partidas": "tablas/partidas.csv"
+  },
+  "bloques": [
+    {
+      "tipo": "portada",
+      "lineas": [
+        { "texto": "{{entidad.razon_social}}", "tamano": 36, "negrita": true, "color": "1F3864" },
+        { "texto": "RUC {{entidad.ruc}}", "tamano": 22 },
+        { "texto": "{{entidad.direccion}}, {{entidad.distrito}}, {{entidad.departamento}}", "tamano": 22 },
+        { "texto": "", "tamano": 22, "espacio_despues": 1200 },
+        { "texto": "PLAN OPERATIVO Y PRESUPUESTO", "tamano": 44, "negrita": true, "color": "1F3864" },
+        { "texto": "(POE) — PERIODO {{anio}}", "tamano": 26 },
+        { "texto": "", "tamano": 22, "espacio_despues": 900 },
+        { "texto": "Versión 1.0", "tamano": 24 },
+        { "texto": "DOCUMENTO DE DEMOSTRACIÓN — DATOS FICTICIOS", "tamano": 20, "negrita": true, "color": "9C0006" }
+      ]
+    },
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "Control del documento", "indice": true },
+    {
+      "tipo": "tabla",
+      "encabezado": ["Campo", "Valor"],
+      "anchos": [3000, 6026],
+      "primera_negrita": true,
+      "filas": [
+        ["Versión", "1.0"],
+        ["Elaborado por", "Administración y Finanzas"],
+        ["Revisado por", "Gerencia General"],
+        ["Aprobado por", "Gerencia General"],
+        ["Periodo", "Enero a diciembre de {{anio}}"],
+        ["Vigencia", "Hasta la aprobación de una nueva versión"]
+      ]
+    },
+    { "tipo": "parrafo", "texto": "Este documento reemplaza a cualquier versión anterior. Toda modificación de las metas o del presupuesto exige una nueva versión aprobada por la Gerencia General.", "cursiva": true, "tamano": 20 },
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "Contenido" },
+    { "tipo": "indice" },
+    { "tipo": "pagina" },
+
+    { "tipo": "titulo", "nivel": 1, "texto": "I. Objetivo general", "indice": true },
+    { "tipo": "parrafo", "texto": "Establecer las metas operativas y el presupuesto de {{entidad.nombre_comercial}} para el periodo {{anio}}, de modo que cada área conozca qué debe entregar, en qué plazo y con qué recursos." },
+    { "tipo": "parrafo", "texto": "El plan persigue tres resultados: ordenar la ejecución de las actividades, hacer trazable cada partida presupuestaria y contar con una base objetiva para el seguimiento mensual." },
+
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "II. Alcance", "indice": true },
+    { "tipo": "parrafo", "texto": "El plan comprende todas las áreas de {{entidad.nombre_comercial}} y todo el personal, sin distinción de régimen laboral o modalidad contractual." },
+    { "tipo": "lista", "items": [
+      "Las actividades asistenciales y de apoyo detalladas en la sección III.",
+      "Las partidas de ingresos y egresos de la sección IV.",
+      "El seguimiento, la evaluación y el reporte de desvíos de la sección V."
+    ] },
+
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "III. Metas y actividades", "indice": true },
+    { "tipo": "parrafo", "texto": "Las actividades se programan por trimestre. Cada una tiene un responsable y un indicador verificable; el incumplimiento se reporta en el seguimiento mensual." },
+    {
+      "tipo": "tabla",
+      "fuente": "actividades",
+      "encabezado": ["Código", "Actividad", "Área", "Responsable", "Trim.", "Meta"],
+      "columnas": ["codigo", "actividad", "area", "responsable", "trimestre", "meta"],
+      "anchos": [1000, 2900, 1400, 1300, 1000, 1426],
+      "encabezado_azul": true
+    },
+
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "IV. Presupuesto", "indice": true },
+    { "tipo": "parrafo", "texto": "El presupuesto se expresa en soles. La columna ejecutado se actualiza mensualmente y se concilia con los registros contables antes de cada reporte." },
+    {
+      "tipo": "tabla",
+      "fuente": "partidas",
+      "encabezado": ["Código", "Partida", "Categoría", "Presupuestado", "Ejecutado"],
+      "columnas": ["codigo", "partida", "categoria", "presupuestado", "ejecutado"],
+      "anchos": [1100, 3026, 1500, 1700, 1700],
+      "encabezado_azul": true,
+      "totales": ["presupuestado", "ejecutado"]
+    },
+    { "tipo": "parrafo", "texto": "Los importes son estimados para esta demostración y no constituyen un presupuesto real.", "cursiva": true, "tamano": 20 },
+
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "V. Seguimiento y control", "indice": true },
+    { "tipo": "numerada", "items": [
+      "El responsable de cada área reporta el avance de sus actividades antes del día cinco del mes siguiente.",
+      "Administración consolida la ejecución presupuestaria y calcula la desviación respecto de lo presupuestado.",
+      "Toda desviación superior al diez por ciento se explica por escrito a la Gerencia General.",
+      "Gerencia aprueba las reprogramaciones y deja constancia de la nueva versión del plan."
+    ] },
+
+    { "tipo": "pagina" },
+    { "tipo": "titulo", "nivel": 1, "texto": "VI. Disposiciones finales", "indice": true },
+    { "tipo": "numerada", "items": [
+      "El plan entra en vigencia desde su aprobación por la Gerencia General.",
+      "Las copias sin sello de Gerencia son copias no controladas.",
+      "El presente documento es una demostración: la entidad, las cifras y las actividades son ficticias."
+    ] },
+    { "tipo": "firma", "cargo": "Gerencia General", "entidad": "{{entidad.razon_social}}", "texto": "Aprobado el {{entidad.actualizado}}" }
+  ],
+  "constantes": {
+    "anio": "2026"
+  }
+}

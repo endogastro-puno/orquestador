@@ -42,6 +42,14 @@ columnas obligatorias y el validador exige exactamente esas. Agregar una columna
 
 En `entidad.csv` la primera columna declara las **claves obligatorias**.
 
+## Estructura de los documentos declarativos
+
+`tipos/<tipo>.json` no es un contrato de datos sino de **estructura**: declara qué CSV
+usa, qué bloques lleva y dónde empieza cada página. Lo consume
+`herramientas/scripts/generar_documento.py`. Los tipos declarativos hoy son `manual` y
+`plan-operativo`. Agregar un tipo nuevo no requiere código nuevo: se escribe el JSON y,
+si aporta datos, su `.example`.
+
 ## Contratos disponibles
 
 | Contrato | Archivo real | Contenido |
@@ -52,6 +60,9 @@ En `entidad.csv` la primera columna declara las **claves obligatorias**.
 | `tablas/servicios.csv.example` | `usuario/datos/tablas/servicios.csv` | Catálogo de servicios con código único |
 | `tablas/tarifas.csv.example` | `usuario/datos/tablas/tarifas.csv` | Precios por servicio y vigencia |
 | `tablas/horarios.csv.example` | `usuario/datos/tablas/horarios.csv` | Programación de atención |
+| `organizacion/puestos.csv.example` | `usuario/datos/organizacion/puestos.csv` | Puestos del manual de organización y funciones |
+| `tablas/actividades.csv.example` | `usuario/datos/tablas/actividades.csv` | Metas y actividades del plan operativo |
+| `tablas/partidas.csv.example` | `usuario/datos/tablas/partidas.csv` | Partidas presupuestarias del plan operativo |
 
 ## Columnas
 

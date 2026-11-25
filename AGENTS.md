@@ -102,6 +102,9 @@ La verdad está en `usuario/datos/`. Los contratos están en `herramientas/contr
 | `usuario/datos/tablas/servicios.csv` | Catálogo de servicios con código único |
 | `usuario/datos/tablas/tarifas.csv` | Precios por servicio y vigencia |
 | `usuario/datos/tablas/horarios.csv` | Programación de atención |
+| `usuario/datos/tablas/actividades.csv` | Metas y actividades del plan operativo |
+| `usuario/datos/tablas/partidas.csv` | Partidas presupuestarias con montos y periodo |
+| `usuario/datos/organizacion/puestos.csv` | Puestos y funciones para el tipo `manual` |
 
 Reglas:
 
@@ -132,8 +135,14 @@ nombres: `<tipo-de-documento>-<variante>.<ext>`.
 
 Catálogo completo con datos obligatorios y esqueletos de secciones en
 `herramientas/docs/tipos-de-documento.md`. Tipos soportados: `memorandum`, `circular`,
-`informe`, `manual`, `oficio`, `solicitud`, `constancia`, `acta`, `reporte`,
-`cotizacion`, `comunicado`.
+`informe`, `manual`, `plan-operativo`, `oficio`, `solicitud`, `constancia`, `acta`,
+`reporte`, `cotizacion`, `comunicado`.
+
+Los tipos `manual` y `plan-operativo` son **declarativos**: su estructura vive en
+`herramientas/contratos/tipos/<tipo>.json` y se producen con
+`python herramientas/scripts/generar_documento.py --tipo <tipo>`. Para agregar un tipo
+nuevo se escribe un spec y, si trae datos nuevos, un contrato `.example`. **No se escribe
+un generador nuevo ni se pegan datos de empresa en el código.**
 
 Skills por formato:
 
@@ -194,6 +203,7 @@ Cerrá cada cambio de código con su línea de riesgo (`Risk: ...`) cuando corre
 | `herramientas/scripts/verificar_limites.py` | Comprueba que nada de `usuario/` esté versionado |
 | `herramientas/scripts/verificar_entorno.py` | Comprueba que el entorno tenga instalado lo que cada formato necesita |
 | `herramientas/scripts/instalar_todo.py` | Instala lo que falte: `--plan` muestra, `--si` ejecuta. Windows |
+| `herramientas/scripts/generar_documento.py` | Genera un documento desde `herramientas/contratos/tipos/<tipo>.json` y los CSV |
 
 Detalle y reglas para scripts nuevos en `herramientas/scripts/README.md`.
 Qué instalar en la máquina: `INSTALACION.md`.

@@ -10,6 +10,7 @@ Si falta un dato obligatorio, el agente **pregunta**; no redacta con supuestos.
 | `circular` | Aviso de alcance general a todo el personal | `internal-comms` + `docx` | `entidad`, `firmantes` | `.docx`, `.md` |
 | `informe` | Resultados, gestión o incidencias de un periodo | `internal-comms` + `docx` | `entidad`, `firmantes`, tabla de sustento | `.docx`, `.pdf` |
 | `manual` | Manual de Organización y Funciones (MOF): estructura orgánica y funciones por puesto | `internal-comms` + `docx` | `entidad`, `firmantes`, `puestos` | `.docx`, `.pdf` |
+| `plan-operativo` | Plan Operativo y Presupuesto: metas, actividades y partidas de un periodo | `docx` | `entidad`, `actividades`, `partidas` | `.docx`, `.pdf` |
 | `oficio` | Comunicación hacia una entidad externa | `internal-comms` + `docx` | `entidad`, `firmantes` | `.docx`, `.pdf` |
 | `solicitud` | Petición formal dirigida a una autoridad o entidad | `internal-comms` + `docx` | `entidad`, `firmantes` | `.docx`, `.pdf` |
 | `constancia` | Certifica un hecho verificable (atención, trabajo, permanencia) | `docx` | `entidad`, `firmantes` | `.docx`, `.pdf` |
@@ -21,8 +22,8 @@ Si falta un dato obligatorio, el agente **pregunta**; no redacta con supuestos.
 `entidad` = `usuario/datos/organizacion/entidad.csv` · `contactos` =
 `usuario/datos/organizacion/contactos.csv` · `firmantes` =
 `usuario/datos/organizacion/firmantes.csv` · `puestos` =
-`usuario/datos/organizacion/puestos.csv` · `servicios`/`tarifas`/`horarios` =
-`usuario/datos/tablas/`
+`usuario/datos/organizacion/puestos.csv` · `servicios`/`tarifas`/`horarios` ·
+`actividades`/`partidas` = `usuario/datos/tablas/`
 
 ## Formato de salida
 
@@ -102,6 +103,23 @@ nunca `.csv`.
 
 Cada ficha de puesto ocupa su propia página y es la unidad que se audita: si un puesto
 de `puestos.csv` no aparece, o aparece con funciones vacías, el manual está incompleto.
+
+### `plan-operativo`
+
+```text
+1. Portada          — razón social, RUC, periodo, versión
+2. Control del documento
+3. Índice
+4. I.   Objetivo general
+5. II.  Alcance
+6. III. Metas y actividades — tabla de actividades.csv
+7. IV.  Presupuesto — tabla de partidas.csv con fila TOTAL
+8. V.   Seguimiento y control
+9. VI.  Disposiciones finales
+10. Fecha y firma
+```
+
+La suma de `presupuestado` y `ejecutado` se calcula motor arriba, no se escribe a mano.
 
 ### `acta`
 
