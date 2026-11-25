@@ -44,6 +44,7 @@ RENDERIZADOR = RAIZ / "herramientas" / "scripts" / "renderizar_docx.js"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import generadores_usuario as gu  # noqa: E402
+import workspace as ws  # noqa: E402
 from nuevo_entregable import resolver  # noqa: E402
 
 PLACEHOLDER = re.compile(r"\{\{\s*([\w.]+)\s*\}\}")
@@ -328,15 +329,17 @@ def _nombre_entregable(spec: dict[str, Any], datos: dict[str, dict[str, Any]]) -
     return plantilla.replace("{empresa}", empresa)
 
 
-def _validar_salida(ruta: Path) -> Path:
-    """Exige una ruta nueva dentro de usuario/entregables/ y nunca sobrescribe."""
-    entregables = (RAIZ / "usuario" / "entregables").resolve()
+def _validar_salida(ruta: Path, espacio: Path | None = None) -> Path:
+    """Exige una ruta nueva dentro de <espacio>/entregables/ y nunca sobrescribe."""
+    entregables = ws.entregables(espacio or ws.resolver(base=RAIZ)).resolve()
     destino = ruta.resolve()
     try:
         destino.relative_to(entregables)
     except ValueError:
+        referencia = espacio or ws.resolver(base=RAIZ)
         raise ValueError(
-            f"--salida debe quedar dentro de usuario/entregables/: {destino}"
+            f"--salida debe quedar dentro de "
+            f"{ws.mostrar(entregables, referencia.parent)}/: {destino}"
         ) from None
     if destino.exists():
         raise ValueError(
@@ -355,11 +358,13 @@ def _anio(fecha: str | None) -> str:
     return str(date.today().year)
 
 
-def _elegir_generador(args: argparse.Namespace, tipo: str) -> gu.Generador | None:
+def _elegir_generador(
+    args: argparse.Namespace, tipo: str, espacio: Path | None = None
+) -> gu.Generador | None:
     """Decide si el documento se produce con un generador propio del usuario."""
     if getattr(args, "sin_generador", False):
         return None
-    zona = (RAIZ / "usuario" / "generadores").resolve()
+    zona = ws.generadores(espacio or ws.resolver(base=RAIZ)).resolve()
     if args.generador:
         carpeta = Path(args.generador)
         if not carpeta.is_absolute():
@@ -439,12 +444,14 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="ignora los generadores propios del usuario y usa el renderizador genérico",
     )
+    ws.agregar_argumento(parser)
     parser.add_argument("--json", action="store_true", help="resultado como JSON")
     args = parser.parse_args(argv)
+    espacio = ws.resolver(args.workspace, base=RAIZ)
 
     try:
         spec = cargar_spec(args.tipo)
-        directorio = Path(args.datos).resolve() if args.datos else RAIZ / "usuario" / "datos"
+        directorio = Path(args.datos).resolve() if args.datos else ws.datos(espacio)
         datos = leer_datos(spec, directorio)
         constantes = dict(spec.get("constantes", {}))
         constantes.setdefault("anio", _anio(args.fecha))
@@ -452,21 +459,22 @@ def main(argv: list[str] | None = None) -> int:
         indice = calcular_indice(bloques)
 
         if args.salida:
-            salida = _validar_salida(Path(args.salida))
+            salida = _validar_salida(Path(args.salida), espacio)
         else:
             nombre = args.nombre or _nombre_entregable(spec, datos)
-            salida = resolver("word", nombre, args.fecha)
+            salida = resolver("word", nombre, args.fecha, espacio=espacio)
         salida.parent.mkdir(parents=True, exist_ok=True)
 
-        generador = _elegir_generador(args, spec["tipo"])
+        generador = _elegir_generador(args, spec["tipo"], espacio)
         if generador is not None:
+            try:
+                salida_payload = salida.relative_to(RAIZ).as_posix()
+            except ValueError:
+                # Espacio de trabajo fuera del repositorio: el contrato acepta
+                # una ruta absoluta para ese caso.
+                salida_payload = salida.resolve().as_posix()
             payload = gu.construir_payload_generador(
-                spec,
-                datos,
-                bloques,
-                indice,
-                salida.relative_to(RAIZ).as_posix(),
-                constantes,
+                spec, datos, bloques, indice, salida_payload, constantes
             )
             gu.ejecutar(generador, payload, raiz=RAIZ)
             motor_usado = "generador-usuario"
@@ -509,7 +517,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         detalle = f" · generador '{generador_usado}'" if generador_usado else ""
         print(
-            f"OK {salida.relative_to(RAIZ).as_posix()} "
+            f"OK {ws.mostrar(salida, espacio)} "
             f"({salida.stat().st_size} bytes){detalle}"
         )
     return 0

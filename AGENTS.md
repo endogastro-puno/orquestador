@@ -54,6 +54,22 @@ python herramientas/scripts/verificar_limites.py
 
 Detalle completo en `herramientas/docs/limites.md`.
 
+### Espacio de trabajo (`--workspace`)
+
+`usuario/` es el espacio de trabajo **por defecto**. Si los datos del usuario viven
+en otra carpeta —otro cliente, otro disco—, todos los comandos aceptan
+`--workspace <ruta>` o la variable `ORQUESTADOR_WORKSPACE`. Precedencia:
+`--workspace` > `ORQUESTADOR_WORKSPACE` > `<repo>/usuario`.
+
+```bash
+python herramientas/scripts/generar_documento.py --tipo manual --workspace D:\clientes\clinica-a
+python herramientas/scripts/validar_datos.py --workspace D:\clientes\clinica-a
+python herramientas/scripts/init_local.py --workspace D:\clientes\clinica-a
+```
+
+Un espacio externo no puede versionarse en git; `verificar_limites.py` lo informa.
+La regla de zona no cambia: sólo cambia la carpeta donde vive.
+
 ## Mapa del repositorio
 
 | Ruta | Qué es | Dueño |

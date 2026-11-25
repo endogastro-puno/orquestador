@@ -25,6 +25,11 @@ generadores propios del usuario (descubrimiento, payload, invocación como
 subproceso). El contrato, en detalle, está en
 `herramientas/docs/contrato-generador.md`.
 
+`workspace.py` es el módulo que resuelve el **espacio de trabajo**: `--workspace` >
+`ORQUESTADOR_WORKSPACE` > `<repo>/usuario`. Todos los comandos que tocan la zona del
+usuario lo usan, así que apuntar los datos a otra carpeta no cambia ninguna ruta por
+dentro.
+
 Los scripts de Python usan sólo la biblioteca estándar de Python 3.10+, salvo
 `generar_informe_ejecutivo.py` y los generadores propios del usuario (el ejemplo
 incluido), que usan `python-docx` — declarado en `requirements.txt`. Las skills de
@@ -76,6 +81,10 @@ python herramientas/scripts/leer_documento.py usuario/datos/entrada/informe.docx
 python herramientas/scripts/leer_documento.py planilla.xlsx --texto
 
 python herramientas/scripts/selftest.py
+
+# La misma herramienta, con los datos en otra carpeta:
+python herramientas/scripts/init_local.py --workspace D:\clientes\clinica-a
+python herramientas/scripts/validar_datos.py --workspace D:\clientes\clinica-a
 ```
 
 Códigos de salida: `0` correcto, `1` error. Esto permite encadenarlos en el flujo sin
@@ -92,8 +101,9 @@ interpretar texto.
 3. Sin rutas absolutas ni datos incrustados: todo se lee de los contratos, de
    `usuario/` o de argumentos.
 4. Sin nombres reales, RUC, precios ni identificadores en el código, ni en ejemplos.
-5. Rutas relativas a la raíz del repositorio, calculadas desde `__file__`
-   (`RAIZ = Path(__file__).resolve().parents[2]`).
+5. Las rutas de las herramientas salen de `workspace.RAIZ` (calculada desde
+   `__file__`). Las de la zona del usuario salen de `workspace.resolver(...)`:
+   nunca escribas `RAIZ / "usuario"` a mano, porque ignora `--workspace`.
 6. Si el script tiene lógica no trivial, incluí un `--selftest` que no toque el
    repositorio (usá `tempfile`).
 7. Documentá el contrato en el docstring del módulo, no en comentarios sueltos.

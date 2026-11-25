@@ -10,6 +10,10 @@ usuario/datos/  →  usuario/generadores/  →  usuario/plantillas/  →  redacc
 Recordá la frontera: todo lo que se lee vive en `usuario/`, y en `usuario/` sólo se
 escribe dentro de `usuario/entregables/`.
 
+> `usuario/` es el **espacio de trabajo por defecto**. Si el usuario guarda sus datos
+> en otra carpeta, todos los comandos aceptan `--workspace <ruta>` (o la variable
+> `ORQUESTADOR_WORKSPACE`). Ver `herramientas/docs/limites.md`.
+
 ## Paso 1 — Identificar el tipo de documento
 
 Determiná el `tipo` según `herramientas/docs/tipos-de-documento.md`. Si el pedido

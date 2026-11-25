@@ -47,6 +47,23 @@ Detalle completo en [`herramientas/docs/limites.md`](herramientas/docs/limites.m
 
 > El agente no inventa: lee `usuario/datos/`, aplica la plantilla y escribe en `usuario/entregables/`.
 
+## Tus datos, donde vos quieras
+
+`usuario/` es sólo el espacio de trabajo **por defecto**. Si preferís tener tus datos
+en otra carpeta —otro disco, una carpeta sincronizada, un cliente por carpeta— no
+hace falta copiar el repositorio:
+
+```bash
+python herramientas/scripts/init_local.py --workspace D:\clientes\clinica-a
+python herramientas/scripts/generar_documento.py --tipo manual --workspace D:\clientes\clinica-a
+```
+
+También sirve la variable de entorno `ORQUESTADOR_WORKSPACE`. Precedencia:
+`--workspace` → variable de entorno → `usuario/`.
+
+Un espacio externo no se versiona en git; la frontera se mantiene igual, sólo cambia
+de lugar. Detalle en [`herramientas/docs/limites.md`](herramientas/docs/limites.md).
+
 ## Tu plantilla, escrita en código
 
 Si querés que **todos** tus documentos salgan con tu propia plantilla, podés

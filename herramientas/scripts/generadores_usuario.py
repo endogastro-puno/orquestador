@@ -214,9 +214,13 @@ def construir_payload_generador(
     hay placeholders sin resolver ni ``PENDIENTE`` en lo que el documento usa.
     Los ``datos`` crudos van aparte, para que el generador pueda aplicar su
     propia plantilla a los campos que el motor no usó.
+
+    ``salida`` es relativa a la raíz del repositorio —el generador corre con esa
+    raíz como directorio de trabajo— o absoluta cuando el espacio de trabajo vive
+    fuera del repositorio.
     """
-    if Path(salida).is_absolute():
-        raise ValueError("'salida' debe ser una ruta relativa a la raíz del repositorio")
+    if not str(salida).strip():
+        raise ValueError("'salida' no puede estar vacía")
     titulo = spec.get("titulo", spec["tipo"])
     return {
         "version": VERSION_PAYLOAD,
