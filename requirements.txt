@@ -1,0 +1,66 @@
+# ============================================================================
+# Dependencias PIP del orquestador documental
+#
+#     python -m pip install -r requirements.txt
+#
+# IMPORTANTE: los scripts de herramientas/scripts/ NO necesitan nada de esto.
+# Funcionan sólo con la biblioteca estándar de Python 3.10+.
+#
+# Lo de abajo lo necesitan las skills de generación documental:
+#   .docx  -> skill `docx`
+#   .xlsx  -> skill `xlsx`
+#   .pdf   -> skill `pdf`
+#
+# Esto NO alcanza para generar documentos. Además hacen falta programas que se
+# instalan por fuera de pip: Node.js, Pandoc, LibreOffice, Poppler y Tesseract.
+# Ver INSTALACION.md y comprobar con:
+#
+#     python herramientas/scripts/verificar_entorno.py
+#
+# Sin versiones fijadas a propósito: pip elige la build compatible con tu
+# Python. Fijarlas acá rompe instalaciones en versiones nuevas del intérprete.
+# ============================================================================
+
+
+# --- Compartidas ------------------------------------------------------------
+# Imágenes: validación visual de páginas renderizadas y ensamblado de PDF.
+Pillow
+
+
+# --- .docx (skill `docx`) ---------------------------------------------------
+# Lectura segura de XML de Office, parseo de partes OOXML y validación de campo.
+defusedxml
+lxml
+validators
+
+
+# --- .xlsx (skill `xlsx`) ---------------------------------------------------
+# openpyxl: edición por celda. pandas: lectura/escritura masiva.
+openpyxl
+pandas
+
+
+# --- .pdf (skill `pdf`) -----------------------------------------------------
+# pypdf: estructura y formularios. pdfplumber: texto y tablas.
+# reportlab: creación. pdf2image: render de páginas (necesita Poppler).
+pypdf
+pdfplumber
+reportlab
+pdf2image
+
+
+# --- Opcionales -------------------------------------------------------------
+# NO están instalados por defecto. Se activan a mano sólo si hacen falta.
+#
+# markitdown: vistazo rápido del contenido de una hoja de cálculo desde la
+#   terminal. Es comodidad, no requisito: openpyxl y pandas ya cubren la lectura.
+#   Cuidado: en Python muy nuevos pip resuelve markitdown a una versión vieja
+#   (0.0.2) y la versión actual choca con dependencias. Instalarlo aparte:
+#       python -m pip install markitdown
+# markitdown
+#
+# pytesseract + Tesseract: leer texto de un PDF que es una imagen escaneada.
+#   Requiere además el binario `tesseract` o `tesseract-ocr` instalado en el
+#   sistema. Instalarlo aparte:
+#       python -m pip install pytesseract
+# pytesseract
