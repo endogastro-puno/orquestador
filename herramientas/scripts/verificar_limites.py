@@ -39,6 +39,7 @@ ESTRUCTURA_ESPERADA = (
     "usuario/datos/entrada",
     "usuario/plantillas/propias",
     "usuario/plantillas/oficiales",
+    "usuario/generadores",
     "usuario/recursos/logos",
     "usuario/recursos/firmas",
     "usuario/entregables/word",
@@ -124,7 +125,7 @@ def main() -> int:
     # 5. Inventario informativo
     print("\nInventario de la zona del usuario:")
     if DIR_USUARIO.exists():
-        for carpeta in ("datos", "plantillas", "recursos", "entregables"):
+        for carpeta in ("datos", "plantillas", "generadores", "recursos", "entregables"):
             ruta = DIR_USUARIO / carpeta
             total = contar_archivos(ruta)
             print(f"  {carpeta:<12} {total} archivo(s)")

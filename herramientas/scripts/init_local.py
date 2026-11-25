@@ -32,6 +32,7 @@ CARPETAS_USUARIO = (
     "usuario/datos/entrada",
     "usuario/plantillas/propias",
     "usuario/plantillas/oficiales",
+    "usuario/generadores",
     "usuario/recursos/logos",
     "usuario/recursos/firmas",
     "usuario/entregables/word",
