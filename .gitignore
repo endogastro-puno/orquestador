@@ -1,0 +1,53 @@
+# ============================================================================
+# Orquestador Documental - .gitignore
+#
+# DOS ZONAS, DOS DUEÑOS:
+#
+#   usuario/       -> zona del usuario. NUNCA se versiona. Nunca se modifica.
+#   herramientas/  -> herramientas nuestras. Se versiona.
+#
+# La regla es una sola y no tiene excepciones de contenido:
+#   todo lo que está bajo usuario/ queda fuera de git.
+#   Lo único versionado ahí son los .gitkeep que preservan la estructura.
+# ============================================================================
+
+# ---------------------------------------------------------------------------
+# ZONA DEL USUARIO — fuera de git, siempre
+# ---------------------------------------------------------------------------
+usuario/**
+!usuario/**/
+!usuario/**/.gitkeep
+
+# ---------------------------------------------------------------------------
+# Estado local del agente (rutas absolutas de la máquina, cachés)
+# ---------------------------------------------------------------------------
+.atl/
+
+# ---------------------------------------------------------------------------
+# Entornos virtuales, dependencias y temporales
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+node_modules/
+*.tmp
+*.temp
+*.bak
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------------------
+# Archivos de bloqueo y temporales de Office / LibreOffice
+# ---------------------------------------------------------------------------
+~$*
+.~lock.*#
+*.docx~
+*.xlsx~
+*.pptx~

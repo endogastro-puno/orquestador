@@ -1,0 +1,25 @@
+# Formatos binarios: evitar normalización de fin de línea y diffs de texto.
+*.docx  binary
+*.docm  binary
+*.dotx  binary
+*.dotm  binary
+*.xlsx  binary
+*.xlsm  binary
+*.xltx  binary
+*.xlsb  binary
+*.pptx  binary
+*.pptm  binary
+*.potx  binary
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.svg   binary
+*.ico   binary
+*.webp  binary
+*.zip   binary
+*.ttf   binary
+*.otf   binary
+*.woff  binary
+*.woff2 binary
