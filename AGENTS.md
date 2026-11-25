@@ -132,8 +132,8 @@ nombres: `<tipo-de-documento>-<variante>.<ext>`.
 
 Catálogo completo con datos obligatorios y esqueletos de secciones en
 `herramientas/docs/tipos-de-documento.md`. Tipos soportados: `memorandum`, `circular`,
-`informe`, `oficio`, `solicitud`, `constancia`, `acta`, `reporte`, `cotizacion`,
-`comunicado`.
+`informe`, `manual`, `oficio`, `solicitud`, `constancia`, `acta`, `reporte`,
+`cotizacion`, `comunicado`.
 
 Skills por formato:
 

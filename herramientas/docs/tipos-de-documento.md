@@ -9,6 +9,7 @@ Si falta un dato obligatorio, el agente **pregunta**; no redacta con supuestos.
 | `memorandum` | Comunicación interna formal entre áreas o hacia el personal | `internal-comms` + `docx` | `entidad`, `firmantes`, `contactos` | `.docx`, `.md` |
 | `circular` | Aviso de alcance general a todo el personal | `internal-comms` + `docx` | `entidad`, `firmantes` | `.docx`, `.md` |
 | `informe` | Resultados, gestión o incidencias de un periodo | `internal-comms` + `docx` | `entidad`, `firmantes`, tabla de sustento | `.docx`, `.pdf` |
+| `manual` | Manual de Organización y Funciones (MOF): estructura orgánica y funciones por puesto | `internal-comms` + `docx` | `entidad`, `firmantes`, `puestos` | `.docx`, `.pdf` |
 | `oficio` | Comunicación hacia una entidad externa | `internal-comms` + `docx` | `entidad`, `firmantes` | `.docx`, `.pdf` |
 | `solicitud` | Petición formal dirigida a una autoridad o entidad | `internal-comms` + `docx` | `entidad`, `firmantes` | `.docx`, `.pdf` |
 | `constancia` | Certifica un hecho verificable (atención, trabajo, permanencia) | `docx` | `entidad`, `firmantes` | `.docx`, `.pdf` |
@@ -19,7 +20,8 @@ Si falta un dato obligatorio, el agente **pregunta**; no redacta con supuestos.
 
 `entidad` = `usuario/datos/organizacion/entidad.csv` · `contactos` =
 `usuario/datos/organizacion/contactos.csv` · `firmantes` =
-`usuario/datos/organizacion/firmantes.csv` · `servicios`/`tarifas`/`horarios` =
+`usuario/datos/organizacion/firmantes.csv` · `puestos` =
+`usuario/datos/organizacion/puestos.csv` · `servicios`/`tarifas`/`horarios` =
 `usuario/datos/tablas/`
 
 ## Formato de salida
@@ -77,6 +79,29 @@ nunca `.csv`.
 10. VI. Recomendaciones
 11. Fecha y firma
 ```
+
+### `manual`
+
+```text
+1. Portada          — razón social, RUC, título, versión, fecha de aprobación
+2. Control del documento — versión, elaborado por, revisado por, aprobado por
+3. Índice
+4. I.   Objetivo
+5. II.  Alcance
+6. III. Base legal
+7. IV.  Definiciones
+8. V.   Misión, visión y valores
+9. VI.  Estructura orgánica (organigrama por niveles)
+10. VII. Funciones generales por órgano
+11. VIII. Descripción de puestos — una ficha por puesto de `puestos.csv`:
+          denominación, código, área, depende de, supervisa, objetivo,
+          funciones (numeradas), requisitos, nivel
+12. IX.  Disposiciones finales
+13. Fecha y firma   — sólo firmantes con `alcance` que incluya `manual`
+```
+
+Cada ficha de puesto ocupa su propia página y es la unidad que se audita: si un puesto
+de `puestos.csv` no aparece, o aparece con funciones vacías, el manual está incompleto.
 
 ### `acta`
 
