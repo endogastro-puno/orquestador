@@ -47,6 +47,12 @@ Excel) en vez de suponerlos.
   instalaciones de Python, el motor lanzaba al generador con `"python"` del `PATH`.
   Ahora el manifiesto sin `comando` usa `sys.executable`, y el subproceso descarta un
   `PYTHONHOME` heredado. Sin eso, un `PYTHONHOME` viejo rompe el intérprete hijo.
+- **L6** (2026-11-25) — Revisión nativa sobre `a603787..` (`review-4edc7817ca61077f`):
+  el refuter corroboró tres hallazgos severos, todos en el CLI de lectura.
+  Corrección acotada (plan de 80 líneas): el recorte de `--max-caracteres` se aplica
+  una sola vez y antes de elegir la salida, y un PDF sin texto extraíble devuelve
+  código `2` con el aviso en la salida de error en todos los modos. Validación
+  acotada: **aprobada**. Authority quemada. Commit `c620c91`, publicado.
 - **L5** (2026-11-25) — Verificación observada: 77 pruebas en verde; `selftest.py`
   con los dos caminos OK en un temporal (renderizador 11 120 bytes, generador propio
   40 bytes); `leer_documento.py` sobre un entregable real de 20 231 bytes devolvió 219
