@@ -365,6 +365,8 @@ class TestBuscarOcr(BaseTemporal):
 
 class TestInstaladorOcr(unittest.TestCase):
     def test_plan_con_ocr_incluye_puente(self) -> None:
+        if sys.platform != "win32":
+            self.skipTest("el instalador automático es sólo para Windows")
         estado = inst.leer_estado()
         if estado is None:
             self.skipTest("sin verificador no hay plan que mirar")

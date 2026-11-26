@@ -90,3 +90,11 @@ ni una plantilla. Ahora un solo comando deja todo listo.
   S7 promete `1` ante error de escritura). Ahora `plantillas_error` llega al
   resultado, bloquea el `TODO LISTO` y devuelve `1`. Prueba nueva con
   `np.crear` forzado a `OSError`: 204 pruebas en verde.
+- **L7** (2026-11-26) — CI en rojo, pero por defectos **preexistentes** de las
+  pruebas, no del arranque: `TestResolucion` comparaba `resolver()` (que
+  canonicaliza con `.resolve()`) contra la ruta sin resolver, y en macOS
+  `/var` → `/private/var`; en Windows el runner usa nombres 8.3 (`RUNNER~1`). Y
+  `test_plan_con_ocr_incluye_puente` esperaba código `0` en macOS, donde el
+  instalador automático es Windows-only y devuelve `1` a propósito. Se comparan
+  rutas resueltas en ambos lados y la prueba del instalador se saltea fuera de
+  Windows con motivo explícito.

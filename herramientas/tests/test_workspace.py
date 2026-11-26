@@ -59,13 +59,17 @@ class TestResolucion(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporal:
             base = Path(temporal)
             with mock.patch.dict(os.environ, {ws.VARIABLE_ENTORNO: str(base / "entorno")}):
-                self.assertEqual(ws.resolver(base / "explicito", base=base), base / "explicito")
+                # resolver() canonicaliza (symlinks en macOS, nombres 8.3 en Windows).
+                self.assertEqual(
+                    ws.resolver(base / "explicito", base=base),
+                    (base / "explicito").resolve(),
+                )
 
     def test_la_variable_de_entorno_gana_sobre_el_defecto(self) -> None:
         with tempfile.TemporaryDirectory() as temporal:
             base = Path(temporal)
             with mock.patch.dict(os.environ, {ws.VARIABLE_ENTORNO: str(base / "entorno")}):
-                self.assertEqual(ws.resolver(base=base), base / "entorno")
+                self.assertEqual(ws.resolver(base=base), (base / "entorno").resolve())
 
     def test_mostrar_nunca_devuelve_una_ruta_absoluta_si_puede_evitarlo(self) -> None:
         with tempfile.TemporaryDirectory() as temporal:
