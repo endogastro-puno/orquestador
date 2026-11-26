@@ -44,6 +44,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import sys
 import unicodedata
@@ -215,7 +216,10 @@ def indexar(
         previos = {entrada["ruta"]: entrada for entrada in anterior.get("archivos", [])}
 
     encontrados: dict[str, tuple] = {}
-    for carpeta_actual, carpetas, archivos in raiz.walk():
+    # os.walk y no Path.walk: la segunda existe recién desde Python 3.12 y el
+    # repositorio funciona desde 3.10.
+    for carpeta_str, carpetas, archivos in os.walk(raiz):
+        carpeta_actual = Path(carpeta_str)
         # Adentro del walk: filtrar ruido sin distinguir mayúsculas.
         carpetas[:] = [
             nombre for nombre in carpetas if nombre.lower() not in CARPETAS_EXCLUIDAS and not nombre.startswith(".")

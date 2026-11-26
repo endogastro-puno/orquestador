@@ -105,3 +105,11 @@ ni una plantilla. Ahora un solo comando deja todo listo.
   real: el refresco no pierde entradas ni **agrega** duplicados, comparando
   contra el estado inicial. Simulado el camino no-Windows: un `PATH` con
   duplicado queda igual tras dos refrescos.
+- **L9** (2026-11-26) — Tercer fallo de CI y **este sí era un bug de código**:
+  `indexar_documentos.py` recorría con `Path.walk()`, que existe desde Python
+  3.12, pero el repositorio declara 3.10+. En Ubuntu 3.10 fallaban 28 pruebas con
+  `AttributeError: 'PosixPath' object has no attribute 'walk'`. Se reemplazó por
+  `os.walk(raiz)` + `Path(carpeta)` (misma semántica de poda de carpetas).
+  Verificado: 204 pruebas y selftest del indexador OK; además se compiló todo
+  `herramientas/**/*.py` con `ast.parse(feature_version=(3, 10))` sin errores de
+  sintaxis.
