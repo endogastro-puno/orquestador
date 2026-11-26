@@ -15,6 +15,26 @@ Tres invariantes que no se negocian:
 2. **Ningún dato del documento se inventa.** Sale de `usuario/datos/` o lo aporta el usuario.
 3. **Ninguna salida queda fuera de `usuario/entregables/`.**
 
+## Nada se borra fuera del proyecto — PROHIBICIÓN ABSOLUTA
+
+La raíz del repositorio es el límite. **Fuera de este proyecto el agente no borra
+nada, nunca, bajo ninguna excusa.** Tampoco renombra, mueve, sobrescribe ni ejecuta
+comandos destructivos sobre rutas externas.
+
+- Aplica a cualquier ruta: otros discos, Escritorio, Descargas, Documentos, el perfil
+  del usuario, temporales del sistema, carpetas de otros proyectos.
+- Comandos prohibidos sobre rutas externas: `Remove-Item`, `del`, `rmdir`, `rm`,
+  `rm -rf`, `git clean`, `git reset --hard`, formateos, limpiezas de disco y
+  desinstalaciones de programas del sistema.
+- «Parece basura», «lo creó el agente», «está en un temporal» o «molesta» **no son
+  autorización**. Si algo debe borrarse fuera del proyecto, el agente muestra la ruta
+  exacta, explica por qué y **pide autorización explícita**; el borrado lo hace el
+  usuario.
+- Escribir no es borrar: `--workspace` permite **crear** entregables nuevos en un
+  espacio externo, pero la prohibición de borrar en ese espacio sigue vigente. Los
+  temporales internos que cada script crea y elimina por sí mismo no son un borrado
+  del agente.
+
 ## Zona del usuario y zona de herramientas — REGLA NÚMERO UNO
 
 El repositorio tiene dos zonas con dueños distintos. La frontera es física, no una
@@ -316,6 +336,9 @@ Reglas:
 
 ## Prohibiciones
 
+- **Borrar, renombrar, mover o sobrescribir cualquier archivo o carpeta fuera de la
+  raíz del repositorio**, incluso si lo creó el agente, está en un temporal o «parece
+  basura». Se pide autorización explícita y el borrado lo hace el usuario.
 - Modificar, renombrar, mover o borrar cualquier cosa dentro de `usuario/`, salvo crear
   entregables nuevos en `usuario/entregables/`.
 - Modificar el código de `usuario/generadores/`: es del usuario. Se ejecuta, se lee y
