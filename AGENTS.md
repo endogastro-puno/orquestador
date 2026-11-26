@@ -280,6 +280,9 @@ Reglas:
    sin datos incrustados.
 5. Compartir una plantilla, un logo o un dato del usuario requiere autorización
    explícita del responsable.
+6. Flujo de git: se trabaja **directo en `main`**, sin ramas ni PR intermedios, salvo
+   pedido explícito del usuario. Commits convencionales en español, sin atribución
+   de IA. Push a `origin/main` al cierre de cada unidad de trabajo.
 
 ## Prohibiciones
 
