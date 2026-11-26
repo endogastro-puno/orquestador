@@ -76,6 +76,14 @@ class DeteccionDeNvm(unittest.TestCase):
 class RefrescoDePath(unittest.TestCase):
     """``verificar_entorno.py`` debe ver lo que ``instalar_todo.py`` acaba de instalar."""
 
+    @staticmethod
+    def _entradas() -> list[str]:
+        return [
+            entrada.strip().lower()
+            for entrada in os.environ.get("PATH", "").split(os.pathsep)
+            if entrada.strip()
+        ]
+
     def test_no_vacia_el_path(self) -> None:
         modulo = cargar("entorno_windows")
         antes = os.environ.get("PATH", "")
@@ -88,10 +96,20 @@ class RefrescoDePath(unittest.TestCase):
 
     def test_no_duplica_entradas(self) -> None:
         modulo = cargar("entorno_windows")
+        antes = self._entradas()
         modulo.refrescar_path()
         modulo.refrescar_path()
-        entradas = [e.strip().lower() for e in os.environ.get("PATH", "").split(os.pathsep) if e.strip()]
-        self.assertEqual(len(entradas), len(set(entradas)))
+        despues = self._entradas()
+
+        # El refresco no puede perder entradas ni agregar duplicados. Un PATH
+        # heredado puede traer repetidos de antes (pasa en los runners de CI),
+        # así que se compara contra el estado inicial, no contra cero.
+        self.assertTrue(set(antes) <= set(despues), "el refresco perdió entradas")
+        self.assertLessEqual(
+            len(despues) - len(set(despues)),
+            len(antes) - len(set(antes)),
+            "el refresco agregó entradas duplicadas",
+        )
 
     def test_el_verificador_usa_el_refresco(self) -> None:
         fuente = (SCRIPTS / "verificar_entorno.py").read_text(encoding="utf-8")

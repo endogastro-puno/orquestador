@@ -98,3 +98,10 @@ ni una plantilla. Ahora un solo comando deja todo listo.
   instalador automático es Windows-only y devuelve `1` a propósito. Se comparan
   rutas resueltas en ambos lados y la prueba del instalador se saltea fuera de
   Windows con motivo explícito.
+- **L8** (2026-11-26) — Segundo fallo de CI, también preexistente y sólo en
+  Ubuntu: `test_no_duplica_entradas` exigía un `PATH` sin repetidos, pero
+  `refrescar_path()` es no-op fuera de Windows y el runner de Linux ya traía un
+  duplicado heredado (19 entradas, 18 únicas). Se cambia la aserción al contrato
+  real: el refresco no pierde entradas ni **agrega** duplicados, comparando
+  contra el estado inicial. Simulado el camino no-Windows: un `PATH` con
+  duplicado queda igual tras dos refrescos.
