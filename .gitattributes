@@ -23,3 +23,7 @@
 *.otf   binary
 *.woff  binary
 *.woff2 binary
+
+# Lanzadores de Windows: cmd.exe espera fin de línea CRLF.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf

@@ -32,9 +32,16 @@ ni una plantilla. Ahora un solo comando deja todo listo.
   abrirse. El menú sigue sin duplicar lógica: corre `empezar.py` como
   subproceso.
 - **S7** — Códigos de salida explícitos: `0` todo listo; `1` estructura
-  preparada pero falta algo obligatorio del entorno o hubo un error de escritura.
-  Mensajes en español neutro, sin rutas absolutas incrustadas ni datos de
-  empresa; sólo biblioteca estándar.
+  preparada pero falta algo obligatorio del entorno, no se pudo verificar el
+  entorno o hubo un error de escritura. Mensajes en español neutro, sin rutas
+  absolutas incrustadas ni datos de empresa; sólo biblioteca estándar.
+- **S8** — Windows sin terminal: `EMPEZAR.bat` y `MENU.bat` en la raíz. Doble
+  clic, buscan `py -3` y luego `python` **verificando que sea 3.10+**, limpian
+  `PYTHONHOME`/`PYTHONPATH` heredados de otra instalación (rompen Python sin
+  avisar), pasan los argumentos y hacen `pause` para que el resultado se lea.
+  Se versionan con fin de línea CRLF.
+- **S9** — Sólo se imprime `TODO LISTO` cuando el entorno quedó verificado y sin
+  faltantes; si no se pudo verificar, se dice y el código de salida es `1`.
 
 ## Tasks
 
@@ -42,8 +49,9 @@ ni una plantilla. Ahora un solo comando deja todo listo.
 |----|-------|------|--------|-----------|
 | T1 | S1 S2 S3 S5 S7 | inline | hecho | `herramientas/scripts/empezar.py` (`preparar`, `crear_plantillas`, `datos_pendientes`, `mostrar_plan`, `main`, `selftest`) |
 | T2 | S6 | inline | hecho | `herramientas/scripts/menu.py` (acción 15, `necesita_primer_arranque`, sugerencia en `mostrar_menu`) |
-| T3 | S1–S7 | inline | hecho | `herramientas/tests/test_empezar.py` (16 pruebas) |
+| T3 | S1–S9 | inline | hecho | `herramientas/tests/test_empezar.py` (22 pruebas) |
 | T4 | S1 S4 S6 | inline | hecho | `README.md`, `INSTALACION.md`, `AGENTS.md`, `habilidades.md`, `scripts/README.md` |
+| T5 | S8 S9 | inline | hecho | `EMPEZAR.bat`, `MENU.bat`, `.gitattributes`; pruebas de lanzadores y de `TODO LISTO` en `test_empezar.py` |
 
 ## Log
 
@@ -67,3 +75,13 @@ ni una plantilla. Ahora un solo comando deja todo listo.
   (avisa en otros sistemas y continúa con la estructura); las plantillas base son
   `.docx`/`.xlsx` sobrios, no el membrete real del usuario, que se instala
   después con `instalar_plantilla.py`.
+- **L5** (2026-11-26) — El usuario preguntó «¿falta algo?». Faltaba el doble clic:
+  el primer paso seguía siendo abrir una terminal. Se agregan `EMPEZAR.bat` y
+  `MENU.bat`. Probarlos destapó un caso real: la sesión traía
+  `PYTHONHOME=C:\ZK\Python37` y `py -3` arrancaba Python 3.15 con esa raíz, con
+  un error fatal de `site`. Los lanzadores ahora limpian `PYTHONHOME`/
+  `PYTHONPATH` y verifican `sys.version_info >= (3, 10)` antes de usarlos. Humo
+  real con el entorno envenenado: `EMPEZAR.bat --plan` y `MENU.bat --selftest`
+  funcionaron igual. De paso, el mensaje final de `empezar.py` se alineó con la
+  guía (`TODO LISTO`) y el código de salida pasó a `1` cuando no se pudo
+  verificar el entorno.

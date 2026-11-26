@@ -154,9 +154,71 @@ class TestMain(BaseTemporal):
         self.assertEqual(codigo, 0)
         self.assertEqual(list(pl.carpeta_destino(self.espacio).glob("*")), [])
 
+    def test_no_poder_verificar_el_entorno_devuelve_uno(self) -> None:
+        with mock.patch.object(empezar, "_verificar", return_value=None):
+            codigo = self.correr(["--si", "--sin-instalar"])
+
+        self.assertEqual(codigo, 1)
+        self.assertTrue((self.espacio / "datos" / "organizacion" / "entidad.csv").is_file())
+
+    def test_avisa_todo_listo_cuando_no_falta_nada(self) -> None:
+        estado = {"faltantes_obligatorios": [], "faltantes_opcionales": []}
+        salida = io.StringIO()
+        with mock.patch.object(empezar, "_verificar", return_value=estado):
+            with redirect_stdout(salida):
+                codigo = empezar.main(
+                    ["--si", "--sin-instalar", "--workspace", str(self.espacio)]
+                )
+
+        self.assertEqual(codigo, 0)
+        self.assertIn("TODO LISTO", salida.getvalue())
+
+    def test_no_avisa_todo_listo_si_falta_algo(self) -> None:
+        estado = {"faltantes_obligatorios": ["pandoc"], "faltantes_opcionales": []}
+        salida = io.StringIO()
+        with mock.patch.object(empezar, "_verificar", return_value=estado):
+            with redirect_stdout(salida):
+                codigo = empezar.main(
+                    ["--si", "--sin-instalar", "--workspace", str(self.espacio)]
+                )
+
+        self.assertEqual(codigo, 1)
+        self.assertNotIn("TODO LISTO", salida.getvalue())
+
     def test_selftest(self) -> None:
         with redirect_stdout(io.StringIO()):
             self.assertEqual(empezar.selftest(), 0)
+
+
+class TestLanzadores(unittest.TestCase):
+    """Los atajos de doble clic para Windows: existen, apuntan bien y no se cierran solos."""
+
+    def leer(self, nombre: str) -> str:
+        ruta = RAIZ / nombre
+        self.assertTrue(ruta.is_file(), f"falta {nombre}")
+        return ruta.read_text(encoding="utf-8", errors="replace").lower()
+
+    def test_lanzador_del_primer_arranque(self) -> None:
+        texto = self.leer("EMPEZAR.bat")
+        self.assertIn("empezar.py", texto)
+        self.assertIn("py -3", texto)
+        self.assertIn("python", texto)
+        self.assertIn("pause", texto)
+        self.assertIn("sys.version_info", texto)
+        self.assertIn("set pythonhome=", texto)
+        self.assertIn("set pythonpath=", texto)
+
+    def test_lanzador_del_menu(self) -> None:
+        texto = self.leer("MENU.bat")
+        self.assertIn("menu.py", texto)
+        self.assertIn("py -3", texto)
+        self.assertIn("pause", texto)
+        self.assertIn("sys.version_info", texto)
+
+    def test_lanzadores_usan_crlf(self) -> None:
+        for nombre in ("EMPEZAR.bat", "MENU.bat"):
+            with self.subTest(nombre=nombre):
+                self.assertIn(b"\r\n", (RAIZ / nombre).read_bytes())
 
 
 class TestMenu(BaseTemporal):

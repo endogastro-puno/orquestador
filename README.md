@@ -207,7 +207,11 @@ biblioteca estándar.
 
 ## Puesta en marcha
 
-Un solo comando deja la PC lista — estructura, datos base y una plantilla por tipo:
+**En Windows: hacé doble clic en `EMPEZAR.bat`.** Abre una ventana, deja todo
+preparado y no se cierra hasta que leas el resultado. No hay que abrir una
+terminal ni escribir nada.
+
+Ese mismo trabajo, desde la terminal:
 
 ```bash
 python herramientas/scripts/empezar.py
@@ -239,6 +243,8 @@ Los `PENDIENTE` los completás vos: el agente no inventa datos.
 orquestador/
 ├── AGENTS.md                       # manual operativo del agente
 ├── README.md
+├── EMPEZAR.bat                     # doble clic: primer arranque completo (Windows)
+├── MENU.bat                        # doble clic: menú de facilidades (Windows)
 ├── INSTALACION.md                  # qué instalar para que todo funcione
 ├── requirements.txt                # dependencias pip
 ├── package.json                    # dependencia npm `docx`

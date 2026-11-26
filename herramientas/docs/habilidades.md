@@ -19,6 +19,9 @@ nada a mano —entorno, carpetas, datos base y una plantilla de cada tipo—:
 python herramientas/scripts/empezar.py
 ```
 
+En Windows no hace falta escribir nada: **doble clic en `EMPEZAR.bat`** (primer
+arranque) o **`MENU.bat`** (menú de todas las opciones).
+
 ## Leer: del archivo suelto al texto usable
 
 | Habilidad | Skill | Script | Necesita instalado |

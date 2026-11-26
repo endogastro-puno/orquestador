@@ -14,30 +14,24 @@ falta leer nada más.
 ### Lo único que tenés que hacer
 
 1. Abrí la carpeta del proyecto en el Explorador de Windows.
-2. **Clic derecho** en un espacio vacío de la carpeta → **Abrir en Terminal**.
-   - En Windows 10: mantené **Shift**, clic derecho → **Abrir ventana de
-     PowerShell aquí**.
-3. Se abre una ventana negra o azul. **Pegá esta línea** (clic derecho pega) y
-   apretá **Enter**:
-
-   ```powershell
-   python herramientas/scripts/empezar.py
-   ```
-
-4. El comando revisa qué le falta a la PC y te pregunta si lo instala. Apretá
-   **Enter** (la respuesta ya viene en «sí»).
-5. Windows te va a pedir permiso para instalar programas. **Aceptá** (decir que
+2. Hacé **doble clic** en `EMPEZAR.bat`.
+3. Se abre una ventana. El programa revisa qué le falta a la PC y te pregunta si
+   lo instala: apretá **Enter** (la respuesta ya viene en «sí»).
+4. Windows te va a pedir permiso para instalar programas. **Aceptá** (decir que
    sí).
-6. Esperá. Puede tardar entre **5 y 20 minutos** según tu internet. **No cierres
+5. Esperá. Puede tardar entre **5 y 20 minutos** según tu internet. **No cierres
    la ventana** y no aprietes teclas mientras trabaja.
 
-Al terminar, ese mismo comando ya te dejó:
+Al terminar, ese mismo programa ya te dejó:
 
 - tus carpetas en `usuario/`,
 - tus archivos de datos base (los completás después),
 - una plantilla inicial de cada tipo de documento.
 
 No tenés que crear nada desde cero.
+
+> Si preferís la terminal, el equivalente es
+> `python herramientas/scripts/empezar.py` desde la carpeta del proyecto.
 
 ### Cómo sé si terminó bien
 
@@ -49,10 +43,15 @@ TODO LISTO
 
 | Lo que ves al final | Qué significa | Qué hacés |
 | --- | --- | --- |
-| `TODO LISTO` | Ya está. Podés crear documentos. | Seguí con el paso de abajo. |
-| `FALTAN COSAS` | Algo no se pudo instalar. | Copiá todo el texto y pegáselo al agente. |
-| `python no se reconoce...` | Falta Python en la computadora. | Pedile al agente: «no tengo Python instalado, instalalo y seguí». |
-| La ventana se cerró sola | Se cortó la instalación. | Volvé a empezar desde el paso 3. |
+| `TODO LISTO` | Ya está el entorno y la estructura. | Seguí con el paso de abajo. |
+| `Entorno: faltan ...` | Algo no se pudo instalar. | Copiá todo el texto y pegáselo al agente. |
+| `No encontre Python 3.10 o superior` | Falta Python o es viejo. | Pedile al agente: «no tengo Python instalado, instalalo y seguí». |
+| La ventana se cerró sola | Se cortó la instalación. | Volvé a abrir `EMPEZAR.bat`. |
+
+### Para volver a usar las herramientas
+
+Doble clic en `MENU.bat`: lista todas las opciones (leer un documento, generar
+uno, indexar tus carpetas) y las corre sin que escribas comandos.
 
 ### Y ahora qué
 

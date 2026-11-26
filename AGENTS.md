@@ -103,6 +103,7 @@ Resumen operativo:
 | `herramientas/tests/` | Pruebas de regresión (sólo biblioteca estándar) | nosotros |
 | `herramientas/docs/` | Catálogo de tipos, flujo, límites de zona y lectura de documentos | nosotros |
 | `herramientas/ejemplos/` | Ejemplo de generador propio del usuario | nosotros |
+| `EMPEZAR.bat` · `MENU.bat` | Atajos de doble clic para Windows: primer arranque y menú | nosotros |
 | `INSTALACION.md` | Qué instalar para que el repositorio funcione | nosotros |
 | `.opencode/skills/` | Skills instaladas | nosotros |
 | `odd/` | Registro de decisiones de desarrollo | nosotros |

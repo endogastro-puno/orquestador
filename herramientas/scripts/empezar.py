@@ -23,8 +23,8 @@ Opciones útiles:
   escaneados.
 
 Códigos de salida: ``0`` todo listo, ``1`` la estructura quedó preparada pero
-falta algo obligatorio del entorno (el mensaje dice qué), ``1`` error de
-escritura.
+falta algo obligatorio del entorno, no se pudo verificar el entorno, o hubo un
+error de escritura.
 """
 
 from __future__ import annotations
@@ -292,7 +292,9 @@ def main(argv: list[str] | None = None) -> int:
             f"en {ws.mostrar(espacio / 'datos', espacio)}/"
         )
         print("  Eso lo completás vos: el agente no inventa datos.")
-    if obligatorios:
+    if estado is None:
+        print("  Entorno: no se pudo verificar; corré verificar_entorno.py a mano.")
+    elif obligatorios:
         print(f"  Entorno: faltan {len(obligatorios)} ({', '.join(obligatorios)}).")
     else:
         print("  Entorno: completo.")
@@ -306,7 +308,10 @@ def main(argv: list[str] | None = None) -> int:
     print("  2. Abrí el menú y elegí una opción:")
     print("       python herramientas/scripts/menu.py")
 
-    return 0 if not obligatorios else 1
+    if estado is not None and not obligatorios:
+        print("\nTODO LISTO: la estructura y el entorno quedaron preparados.")
+
+    return 0 if estado is not None and not obligatorios else 1
 
 
 def selftest() -> int:
