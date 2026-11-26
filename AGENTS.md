@@ -104,7 +104,10 @@ Detalle completo en `herramientas/docs/flujo-de-trabajo.md`. Resumen:
    Si el pedido trae insumos (Word, PDF, Excel) en `usuario/datos/entrada/`, se leen
    con `python herramientas/scripts/leer_documento.py <archivo> --json`. Un insumo que
    no se leyó no se usa: no se resume de memoria.
-3. **Resolver la plantilla** con la precedencia de la sección siguiente.
+3. **Resolver la plantilla** con la precedencia de la sección siguiente. Si el
+   usuario trae su propia plantilla en cualquier ruta de su máquina, se copia con
+   `python herramientas/scripts/instalar_plantilla.py --origen <ruta> --tipo <tipo>`:
+   nunca se pega a mano en `usuario/plantillas/`.
 4. **Redactar** con el esqueleto del tipo y con `internal-comms` o `doc-coauthoring`.
 5. **Generar** con la skill correspondiente sobre la ruta que devuelve
    `python herramientas/scripts/nuevo_entregable.py`.
@@ -234,7 +237,10 @@ Cerrá cada cambio de código con su línea de riesgo (`Risk: ...`) cuando corre
 | `herramientas/scripts/instalar_todo.py` | Instala lo que falte: `--plan` muestra, `--si` ejecuta. Windows |
 | `herramientas/scripts/generar_documento.py` | Genera un documento desde `herramientas/contratos/tipos/<tipo>.json` y los CSV |
 | `herramientas/scripts/listar_generadores.py` | Lista los generadores propios del usuario en `usuario/generadores/` |
-| `herramientas/scripts/leer_documento.py` | Lee `.docx`, `.pdf`, `.xlsx`, `.csv`, `.md`, `.txt` y devuelve texto y estructura |
+| `herramientas/scripts/leer_documento.py` | Lee `.docx`, `.pdf`, `.xlsx`, `.csv`, `.md`, `.txt` e imágenes con OCR; devuelve texto y estructura |
+| `herramientas/scripts/menu.py` | Menú interactivo que lista y corre todas las facilidades; `--opcion N` para uso directo |
+| `herramientas/scripts/instalar_plantilla.py` | Copia una plantilla existente del usuario a `plantillas/propias/` con el nombre canónico |
+| `herramientas/scripts/nueva_plantilla.py` | Crea una plantilla inicial sobria (`.docx`, `.xlsx` o `.md`) para un tipo |
 | `herramientas/scripts/selftest.py` | Prueba de humo del motor en un temporal; no toca `usuario/` |
 
 Detalle y reglas para scripts nuevos en `herramientas/scripts/README.md`.

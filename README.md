@@ -47,6 +47,57 @@ Detalle completo en [`herramientas/docs/limites.md`](herramientas/docs/limites.m
 
 > El agente no inventa: lee `usuario/datos/`, aplica la plantilla y escribe en `usuario/entregables/`.
 
+## Todo desde un menú
+
+Sin memorizar comandos:
+
+```bash
+python herramientas/scripts/menu.py
+```
+
+Lista las facilidades y corre la que elijas: preparar tus datos, validarlos,
+leer un insumo, traer tu plantilla, crear una plantilla inicial, generar un
+documento o revisar el entorno. Cada opción corre otro script del repositorio
+y pasa su código de salida tal cual. También directo, sin menú:
+
+```bash
+python herramientas/scripts/menu.py --opcion 5 -- entrada.docx --json
+```
+
+## Leer insumos: Word, PDF, Excel, texto e imágenes
+
+```bash
+python herramientas/scripts/leer_documento.py usuario/datos/entrada/informe.docx --json
+python herramientas/scripts/leer_documento.py escaneo.png --texto
+```
+
+`.docx`, `.csv`, `.md` y `.txt` no necesitan nada instalado. `.pdf` y `.xlsx`
+usan las dependencias de `requirements.txt`. Las imágenes (`.png`, `.jpg`,
+`.tif`, `.bmp`, `.webp`) se leen con OCR opcional — si falta, el error dice qué
+instalar. Detalle del contrato de salida:
+[`herramientas/docs/lectura-de-documentos.md`](herramientas/docs/lectura-de-documentos.md).
+
+## Tu plantilla, la que ya tenés
+
+No hace falta rediseñar nada: si ya tenés un membrete o una planilla que usás
+hace años, se instala con un comando y queda en el lugar donde el orquestador
+la busca primero:
+
+```bash
+python herramientas/scripts/instalar_plantilla.py --origen "C:\Users\vo\Documentos\membrete.docx" --tipo oficio --variante Corporativa
+```
+
+Se **copia**, no se mueve: tu original queda donde está. Nunca sobrescribe: si
+ya existe una plantilla con ese nombre, te lo dice y no toca nada. Y si no
+tenés ninguna todavía:
+
+```bash
+python herramientas/scripts/nueva_plantilla.py --tipo informe
+```
+
+crea una base sobria con los marcadores `{{titulo}}` `{{fecha}}` `{{cuerpo}}`;
+el estilo lo ponés vos.
+
 ## Tus datos, donde vos quieras
 
 `usuario/` es sólo el espacio de trabajo **por defecto**. Si preferís tener tus datos
@@ -164,11 +215,14 @@ orquestador/
     │   └── contrato-generador.md   # cómo se usa tu plantilla escrita en código
     ├── ejemplos/                   # ejemplo de generador propio
     └── scripts/
+        ├── menu.py                 # todas las facilidades, sin memorizar comandos
         ├── init_local.py           # crea tu estructura y tus datos
         ├── validar_datos.py        # valida tus datos contra los contratos
         ├── nuevo_entregable.py     # resuelve la ruta con la convención de nombres
         ├── verificar_limites.py    # comprueba que la frontera se respete
-        ├── leer_documento.py       # lee Word, PDF, Excel, CSV y texto
+        ├── leer_documento.py       # lee Word, PDF, Excel, CSV, texto e imágenes (OCR)
+        ├── instalar_plantilla.py   # trae tu plantilla existente a plantillas/propias/
+        ├── nueva_plantilla.py      # crea una plantilla inicial sobria
         ├── listar_generadores.py   # lista tu plantilla en código, si tenés una
         ├── selftest.py             # prueba de humo: ¿el motor funciona acá?
         └── verificar_entorno.py    # comprueba que el entorno tenga todo instalado

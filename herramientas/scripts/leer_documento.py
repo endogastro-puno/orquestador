@@ -13,6 +13,7 @@ Formatos y dependencias:
 | `.xlsx` | `openpyxl` | `requirements.txt` |
 | `.csv` | módulo `csv` | **ninguna** |
 | `.md`, `.txt` | lectura directa | **ninguna** |
+| `.png`, `.jpg`, `.jpeg`, `.tif`, `.tiff`, `.bmp`, `.webp` | OCR (`Pillow` + `pytesseract` + binario Tesseract) | opcional: ver `INSTALACION.md` |
 
 Nunca modifica el archivo: sólo lee. No escribe nada.
 
@@ -21,19 +22,23 @@ Uso::
     python herramientas/scripts/leer_documento.py usuario/datos/entrada/informe.docx
     python herramientas/scripts/leer_documento.py planilla.xlsx --json
     python herramientas/scripts/leer_documento.py contrato.pdf --texto
+    python herramientas/scripts/leer_documento.py escaneo.png --texto
 
 Contrato de salida (`--json`):
 
 * siempre: `ok`, `formato`, `ruta`, `bytes`, `texto`, `metadatos`;
 * `.docx`: `parrafos`, `tablas`;
 * `.pdf`: `paginas` (una entrada por página, con `numero` y `texto`);
-* `.xlsx`: `hojas` (una entrada por hoja, con `nombre` y `filas`).
+* `.xlsx`: `hojas` (una entrada por hoja, con `nombre` y `filas`);
+* imágenes: `pixeles` en `metadatos` (ancho x alto).
 
 Las claves que no aplican al formato no aparecen. `texto` es la versión plana,
 lista para buscar o pasar a otro comando.
 
 Códigos de salida: ``0`` leyó y devolvió texto, ``2`` leyó pero no hay texto
-extraíble (PDF escaneado, con el aviso en la salida de error), ``1`` error.
+extraíble (PDF escaneado, imagen sin texto; con el aviso en la salida de
+error), ``1`` error — incluida la imagen con OCR sin instalar, cuyo mensaje
+dice exactamente qué falta.
 """
 
 from __future__ import annotations
@@ -62,7 +67,21 @@ NS_CORE = {
     "ultimo_editor": CP + "lastModifiedBy",
 }
 
-SOPORTADOS = (".docx", ".pdf", ".xlsx", ".csv", ".md", ".txt")
+SOPORTADOS = (
+    ".docx",
+    ".pdf",
+    ".xlsx",
+    ".csv",
+    ".md",
+    ".txt",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".tif",
+    ".tiff",
+    ".bmp",
+    ".webp",
+)
 
 
 def _texto_parrafo(parrafo: ElementTree.Element) -> str:
@@ -222,6 +241,45 @@ def leer_texto(ruta: Path) -> dict[str, Any]:
     }
 
 
+def leer_imagen(ruta: Path) -> dict[str, Any]:
+    """Lee una imagen con OCR (`Pillow` + `pytesseract` + binario Tesseract).
+
+    El OCR es opcional: sin él el comando falla con un mensaje que dice qué
+    falta instalar, en vez de devolver texto vacío como si la imagen no
+    tuviera nada.
+    """
+    try:
+        import pytesseract  # type: ignore
+        from PIL import Image  # type: ignore
+    except ImportError:
+        raise ValueError(
+            "leer una imagen necesita OCR: python -m pip install pytesseract pillow "
+            "y el binario Tesseract (ver INSTALACION.md, sección OCR)"
+        ) from None
+
+    try:
+        with Image.open(ruta) as imagen:
+            pixeles = f"{imagen.width}x{imagen.height}"
+            texto = (pytesseract.image_to_string(imagen) or "").strip()
+    except pytesseract.TesseractNotFoundError:
+        raise ValueError(
+            "no se encuentra el binario 'tesseract': instalalo con "
+            "'winget install tesseract-ocr.tesseract' (ver INSTALACION.md, sección OCR)"
+        ) from None
+
+    resultado: dict[str, Any] = {
+        "formato": ruta.suffix.lower().lstrip("."),
+        "metadatos": {"pixeles": pixeles, "ocr": "tesseract"},
+        "texto": texto,
+    }
+    if not texto:
+        resultado["aviso"] = (
+            "la imagen no produjo texto: puede estar vacía, borrosa o con letra "
+            "que el OCR no reconoce. Probá con una imagen más nítida."
+        )
+    return resultado
+
+
 LECTORES = {
     ".docx": leer_docx,
     ".pdf": leer_pdf,
@@ -229,6 +287,13 @@ LECTORES = {
     ".csv": leer_csv,
     ".md": leer_texto,
     ".txt": leer_texto,
+    ".png": leer_imagen,
+    ".jpg": leer_imagen,
+    ".jpeg": leer_imagen,
+    ".tif": leer_imagen,
+    ".tiff": leer_imagen,
+    ".bmp": leer_imagen,
+    ".webp": leer_imagen,
 }
 
 

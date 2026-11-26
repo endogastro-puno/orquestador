@@ -13,6 +13,7 @@ estructura para trabajar sobre datos reales.
 | `.xlsx` | `openpyxl`, en modo sólo lectura | `requirements.txt` |
 | `.csv` | módulo `csv` | **ninguna** |
 | `.md`, `.txt` | lectura directa | **ninguna** |
+| `.png`, `.jpg`, `.jpeg`, `.tif`, `.tiff`, `.bmp`, `.webp` | OCR: `Pillow` + `pytesseract` + binario Tesseract | opcional (`INSTALACION.md`) |
 
 Un `.docx` es un ZIP con XML adentro: por eso se lee sin instalar nada. Eso
 importa: el formato más común del trabajo administrativo no agrega dependencias
@@ -25,6 +26,7 @@ python herramientas/scripts/leer_documento.py usuario/datos/entrada/informe.docx
 python herramientas/scripts/leer_documento.py planilla.xlsx --json
 python herramientas/scripts/leer_documento.py contrato.pdf --texto
 python herramientas/scripts/leer_documento.py nota.md --max-caracteres 500
+python herramientas/scripts/leer_documento.py escaneo.png --texto
 ```
 
 | Opción | Qué hace |
@@ -38,8 +40,8 @@ Códigos de salida:
 | Código | Significado |
 | --- | --- |
 | `0` | Leyó y devolvió texto. |
-| `2` | Leyó, pero **no hay texto extraíble** (PDF escaneado). El aviso va a la salida de error. |
-| `1` | Error: no existe, formato no soportado, archivo corrupto o dependencia faltante. |
+| `2` | Leyó, pero **no hay texto extraíble** (PDF escaneado, imagen sin texto). El aviso va a la salida de error. |
+| `1` | Error: no existe, formato no soportado, archivo corrupto o dependencia faltante — incluida la imagen con OCR sin instalar, cuyo mensaje dice qué falta. |
 
 ## Contrato de salida (`--json`)
 
@@ -54,7 +56,8 @@ Según el formato, además:
 | `paginas` | `.pdf` | Una entrada por página: `numero` y `texto`. |
 | `hojas` | `.xlsx` | Una entrada por hoja: `nombre` y `filas`. |
 | `filas` | `.csv` | Filas crudas del archivo. |
-| `aviso` | `.pdf` | Sólo si el PDF no tiene texto extraíble. |
+| `pixeles` | imágenes | En `metadatos`: ancho x alto de la imagen leída. |
+| `aviso` | `.pdf`, imágenes | Sólo si no hay texto extraíble. |
 
 `ruta` se informa relativa al repositorio cuando el archivo está adentro; nunca
 se filtran rutas absolutas de la máquina.
@@ -80,7 +83,12 @@ se filtran rutas absolutas de la máquina.
 3. **PDF escaneado**: un PDF que es una imagen no tiene texto extraíble. El
    comando lo detecta y devuelve un `aviso` explícito; para leerlo hace falta OCR
    (`Tesseract`), que no está instalado por defecto.
-4. **Un `.docx` corrupto** falla con error, no con texto vacío.
+4. **Imágenes**: se leen con OCR (`Pillow` + `pytesseract` + binario
+   `Tesseract`, opcional). Sin OCR instalado el comando falla con el mensaje
+   exacto de qué instalar — nunca devuelve "texto vacío" como si la imagen no
+   tuviera nada. Con OCR y sin texto reconocible, devuelve `aviso` y sale con
+   código `2`, igual que un PDF escaneado.
+5. **Un `.docx` corrupto** falla con error, no con texto vacío.
 
 ## Cuándo usarlo
 
