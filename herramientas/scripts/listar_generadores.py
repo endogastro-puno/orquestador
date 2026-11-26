@@ -19,20 +19,21 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import generadores_usuario as gu  # noqa: E402
+import workspace as ws  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--json", action="store_true", help="resultado como JSON")
+    ws.agregar_argumento(parser)
     args = parser.parse_args(argv)
 
-    validos, rotos = gu.descubrir_todos()
+    espacio = ws.resolver(args.workspace)
+    zona = ws.generadores(espacio)
+    validos, rotos = gu.descubrir_todos(zona)
 
     def relativa(ruta: Path) -> str:
-        try:
-            return ruta.relative_to(gu.RAIZ).as_posix()
-        except ValueError:
-            return ruta.as_posix()
+        return ws.mostrar(ruta, espacio)
 
     if args.json:
         print(
@@ -60,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1 if rotos else 0
 
     if not validos and not rotos:
-        print(f"No hay generadores propios en {relativa(gu.DIR_GENERADORES)}.")
+        print(f"No hay generadores propios en {relativa(zona)}/.")
         print(
             "Si querés usar tu propia plantilla como código, creá una carpeta con "
             "un manifiesto 'generador.json' y tu script. "
@@ -69,7 +70,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if validos:
-        print(f"Generadores propios del usuario ({relativa(gu.DIR_GENERADORES)}):\n")
+        print(f"Generadores propios del usuario ({relativa(zona)}):\n")
         for g in validos:
             print(f"  {g.nombre}")
             if g.descripcion:

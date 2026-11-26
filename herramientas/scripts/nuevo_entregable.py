@@ -35,6 +35,9 @@ import unicodedata
 from datetime import date
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import workspace as ws  # noqa: E402
+
 RAIZ = Path(__file__).resolve().parents[2]
 
 # tipo -> (carpeta dentro de usuario/entregables/, extensión por defecto)
@@ -66,8 +69,13 @@ def resolver(
     fecha: str | None = None,
     extension: str | None = None,
     base: Path | None = None,
+    espacio: Path | None = None,
 ) -> Path:
-    """Devuelve la ruta absoluta libre para el entregable pedido."""
+    """Devuelve la ruta absoluta libre para el entregable pedido.
+
+    ``espacio`` es el espacio de trabajo (la carpeta que contiene
+    ``entregables/``). Si se omite, se usa ``<base>/usuario``.
+    """
     clave = tipo.strip().lower()
     if clave not in TIPOS:
         raise ValueError(f"tipo desconocido '{tipo}'. Usá uno de: {', '.join(sorted(TIPOS))}")
@@ -85,8 +93,11 @@ def resolver(
     if not cuerpo:
         raise ValueError("el nombre no produce un slug válido; usá letras o números")
 
-    raiz = base if base is not None else RAIZ
-    destino = raiz / "usuario" / "entregables" / carpeta
+    if espacio is not None:
+        destino = Path(espacio) / "entregables" / carpeta
+    else:
+        raiz = base if base is not None else RAIZ
+        destino = raiz / "usuario" / "entregables" / carpeta
     candidato = destino / f"{fecha}_{cuerpo}.{ext}"
     version = 2
     while candidato.exists():
@@ -166,6 +177,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--extension", help="fuerza la extensión (por ejemplo md)")
     parser.add_argument("--json", action="store_true", help="salida JSON")
     parser.add_argument("--selftest", action="store_true", help="ejecuta comprobaciones internas")
+    ws.agregar_argumento(parser)
     args = parser.parse_args(argv)
 
     if args.selftest:
@@ -174,20 +186,23 @@ def main(argv: list[str] | None = None) -> int:
     if not args.tipo or not args.nombre:
         parser.error("--tipo y --nombre son obligatorios (o usá --selftest)")
 
+    espacio = ws.resolver(args.workspace, base=RAIZ)
     try:
-        ruta = resolver(args.tipo, args.nombre, args.fecha, args.extension)
+        ruta = resolver(args.tipo, args.nombre, args.fecha, args.extension, espacio=espacio)
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
     ruta.parent.mkdir(parents=True, exist_ok=True)
+    legible = ws.mostrar(ruta, espacio)
 
     if args.json:
         print(
             json.dumps(
                 {
                     "ruta": ruta.as_posix(),
-                    "relativa": ruta.relative_to(RAIZ).as_posix(),
+                    "relativa": legible,
+                    "workspace": espacio.as_posix(),
                     "tipo": TIPOS[args.tipo.strip().lower()][0],
                     "extension": ruta.suffix.lstrip("."),
                 },
@@ -195,10 +210,7 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
     else:
-        try:
-            print(ruta.relative_to(RAIZ).as_posix())
-        except ValueError:
-            print(ruta.as_posix())
+        print(legible)
     return 0
 
 

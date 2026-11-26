@@ -54,6 +54,22 @@ python herramientas/scripts/verificar_limites.py
 
 Detalle completo en `herramientas/docs/limites.md`.
 
+### Espacio de trabajo (`--workspace`)
+
+`usuario/` es el espacio de trabajo **por defecto**. Si los datos del usuario viven
+en otra carpeta —otro cliente, otro disco—, todos los comandos aceptan
+`--workspace <ruta>` o la variable `ORQUESTADOR_WORKSPACE`. Precedencia:
+`--workspace` > `ORQUESTADOR_WORKSPACE` > `<repo>/usuario`.
+
+```bash
+python herramientas/scripts/generar_documento.py --tipo manual --workspace D:\clientes\clinica-a
+python herramientas/scripts/validar_datos.py --workspace D:\clientes\clinica-a
+python herramientas/scripts/init_local.py --workspace D:\clientes\clinica-a
+```
+
+Un espacio externo no puede versionarse en git; `verificar_limites.py` lo informa.
+La regla de zona no cambia: sólo cambia la carpeta donde vive.
+
 ## Mapa del repositorio
 
 | Ruta | Qué es | Dueño |
@@ -67,7 +83,7 @@ Detalle completo en `herramientas/docs/limites.md`.
 | `herramientas/contratos/` | Contratos `*.example` de la fuente de datos | nosotros |
 | `herramientas/scripts/` | Inicialización, validación, rutas y verificación de límites | nosotros |
 | `herramientas/tests/` | Pruebas de regresión (sólo biblioteca estándar) | nosotros |
-| `herramientas/docs/` | Catálogo de tipos, flujo de trabajo y límites de zona | nosotros |
+| `herramientas/docs/` | Catálogo de tipos, flujo, límites de zona y lectura de documentos | nosotros |
 | `herramientas/ejemplos/` | Ejemplo de generador propio del usuario | nosotros |
 | `INSTALACION.md` | Qué instalar para que el repositorio funcione | nosotros |
 | `.opencode/skills/` | Skills instaladas | nosotros |
@@ -85,7 +101,13 @@ Detalle completo en `herramientas/docs/flujo-de-trabajo.md`. Resumen:
 2. **Validar la fuente**: `python herramientas/scripts/validar_datos.py`. Si hay
    errores, no se redacta; se informa qué falta. Si hay `PENDIENTE` en campos que el
    documento usa, se pregunta por esos campos y se detiene.
-3. **Resolver la plantilla** con la precedencia de la sección siguiente.
+   Si el pedido trae insumos (Word, PDF, Excel) en `usuario/datos/entrada/`, se leen
+   con `python herramientas/scripts/leer_documento.py <archivo> --json`. Un insumo que
+   no se leyó no se usa: no se resume de memoria.
+3. **Resolver la plantilla** con la precedencia de la sección siguiente. Si el
+   usuario trae su propia plantilla en cualquier ruta de su máquina, se copia con
+   `python herramientas/scripts/instalar_plantilla.py --origen <ruta> --tipo <tipo>`:
+   nunca se pega a mano en `usuario/plantillas/`.
 4. **Redactar** con el esqueleto del tipo y con `internal-comms` o `doc-coauthoring`.
 5. **Generar** con la skill correspondiente sobre la ruta que devuelve
    `python herramientas/scripts/nuevo_entregable.py`.
@@ -215,6 +237,11 @@ Cerrá cada cambio de código con su línea de riesgo (`Risk: ...`) cuando corre
 | `herramientas/scripts/instalar_todo.py` | Instala lo que falte: `--plan` muestra, `--si` ejecuta. Windows |
 | `herramientas/scripts/generar_documento.py` | Genera un documento desde `herramientas/contratos/tipos/<tipo>.json` y los CSV |
 | `herramientas/scripts/listar_generadores.py` | Lista los generadores propios del usuario en `usuario/generadores/` |
+| `herramientas/scripts/leer_documento.py` | Lee `.docx`, `.pdf`, `.xlsx`, `.csv`, `.md`, `.txt` e imágenes con OCR; devuelve texto y estructura |
+| `herramientas/scripts/menu.py` | Menú interactivo que lista y corre todas las facilidades; `--opcion N` para uso directo |
+| `herramientas/scripts/instalar_plantilla.py` | Copia una plantilla existente del usuario a `plantillas/propias/` con el nombre canónico |
+| `herramientas/scripts/nueva_plantilla.py` | Crea una plantilla inicial sobria (`.docx`, `.xlsx` o `.md`) para un tipo |
+| `herramientas/scripts/selftest.py` | Prueba de humo del motor en un temporal; no toca `usuario/` |
 
 Detalle y reglas para scripts nuevos en `herramientas/scripts/README.md`.
 Qué instalar en la máquina: `INSTALACION.md`.

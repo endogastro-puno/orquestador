@@ -106,7 +106,7 @@ class TestDescubrimiento(unittest.TestCase):
             self.assertEqual(len(generadores), 1)
             self.assertEqual(generadores[0].nombre, "mi-plantilla")
             self.assertEqual(generadores[0].tipos, ("informe", "memorandum"))
-            self.assertEqual(generadores[0].comando, ("python",))
+            self.assertEqual(generadores[0].comando, (sys.executable,))
             self.assertTrue(generadores[0].cubre("informe"))
             self.assertFalse(generadores[0].cubre("acta"))
 
@@ -273,9 +273,16 @@ class TestPayloadDelGenerador(unittest.TestCase):
         self.assertNotIn(str(RAIZ), serializado)
         self.assertNotIn("C:\\", serializado)
 
-    def test_una_salida_absoluta_se_rechaza(self) -> None:
+    def test_una_salida_absoluta_se_conserva_para_espacios_externos(self) -> None:
+        payload = gu.construir_payload_generador(
+            self.spec, self.datos, [], [], "C:/tmp/x.docx"
+        )
+
+        self.assertEqual(payload["salida"], "C:/tmp/x.docx")
+
+    def test_una_salida_vacia_se_rechaza(self) -> None:
         with self.assertRaises(ValueError):
-            gu.construir_payload_generador(self.spec, self.datos, [], [], "C:/tmp/x.docx")
+            gu.construir_payload_generador(self.spec, self.datos, [], [], "")
 
 
 class TestEjecucionDelGenerador(unittest.TestCase):

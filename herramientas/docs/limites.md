@@ -114,6 +114,34 @@ usuario/
     └── borradores/            # versiones de trabajo
 ```
 
+### Espacio de trabajo: usar la herramienta con los datos en otro lado
+
+Por defecto la zona del usuario es `usuario/`, adentro del repositorio. Si
+querés tener tus datos **fuera** —otro disco, otra carpeta, un cliente distinto
+por carpeta— no copies el repositorio: apuntá la herramienta.
+
+```bash
+python herramientas/scripts/generar_documento.py --tipo manual --workspace D:\clientes\clinica-a
+python herramientas/scripts/validar_datos.py --workspace D:\clientes\clinica-a
+python herramientas/scripts/init_local.py --workspace D:\clientes\clinica-a
+```
+
+El **espacio de trabajo** es la carpeta que contiene `datos/`, `plantillas/`,
+`generadores/`, `recursos/` y `entregables/`. La precedencia es fija:
+
+```text
+--workspace <ruta>                    ← gana siempre
+ORQUESTADOR_WORKSPACE=<ruta>          ← variable de entorno
+<repo>/usuario                        ← por defecto
+```
+
+Consecuencias:
+
+- Podés atender varios clientes con la misma herramienta, un espacio por cliente.
+- Actualizar el repositorio no toca tus datos, porque ni siquiera están adentro.
+- Un espacio externo **no puede versionarse en git**: `verificar_limites.py` lo
+  informa y sigue. La frontera se mantiene igual, sólo cambió de lugar.
+
 ### Precedencia de plantillas
 
 Al generar un documento, el orden de búsqueda es fijo:

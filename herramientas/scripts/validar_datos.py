@@ -40,9 +40,11 @@ import re
 import sys
 from pathlib import Path
 
-RAIZ = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import workspace as ws  # noqa: E402
+
+RAIZ = ws.RAIZ
 DIR_CONTRATOS = RAIZ / "herramientas" / "contratos"
-DIR_DATOS_USUARIO = RAIZ / "usuario" / "datos"
 
 MARCA_PENDIENTE = "PENDIENTE"
 PATRON_FECHA = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -51,12 +53,12 @@ PATRON_FECHA = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 CLAVES_FECHA = frozenset({"inicio_actividades", "actualizado"})
 
 # Integridad referencial: (archivo real, columna foránea, archivo real destino, columna clave)
-# Las rutas son relativas a la raíz del repositorio.
+# Las rutas son relativas a la carpeta de datos del espacio de trabajo.
 INTEGRIDAD = (
     (
-        "usuario/datos/tablas/tarifas.csv",
+        "tablas/tarifas.csv",
         "codigo_servicio",
-        "usuario/datos/tablas/servicios.csv",
+        "tablas/servicios.csv",
         "codigo",
     ),
 )
@@ -92,7 +94,10 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="trata cualquier valor PENDIENTE como error",
     )
+    ws.agregar_argumento(parser)
     args = parser.parse_args(argv)
+    espacio = ws.resolver(args.workspace)
+    dir_datos = ws.datos(espacio)
 
     errores: list[str] = []
     advertencias: list[str] = []
@@ -113,8 +118,9 @@ def main(argv: list[str] | None = None) -> int:
 
     for contrato in contratos:
         relativa_contrato = contrato.relative_to(DIR_CONTRATOS)
-        real = DIR_DATOS_USUARIO / relativa_contrato.with_suffix("")
-        relativa_real = real.relative_to(RAIZ).as_posix()
+        real = dir_datos / relativa_contrato.with_suffix("")
+        clave_datos = relativa_contrato.with_suffix("").as_posix()
+        relativa_real = ws.mostrar(real, espacio)
         contrato_relativo = contrato.relative_to(RAIZ).as_posix()
 
         if not real.exists():
@@ -126,7 +132,7 @@ def main(argv: list[str] | None = None) -> int:
 
         cabecera_contrato, _ = leer_tabla(contrato)
         cabecera_real, filas = leer_tabla(real)
-        tablas[relativa_real] = (cabecera_real, filas)
+        tablas[clave_datos] = (cabecera_real, filas)
 
         if not cabecera_contrato:
             error(f"{contrato_relativo}: el contrato no tiene cabecera")
@@ -235,7 +241,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print("Validación de la zona de datos del usuario")
     print(f"Contratos revisados: {len(contratos)}")
-    print(f"Datos del usuario:   {DIR_DATOS_USUARIO.relative_to(RAIZ).as_posix()}/")
+    print(f"Datos del usuario:   {ws.mostrar(dir_datos, espacio)}/")
 
     if errores:
         print(f"\nErrores ({len(errores)}):")
