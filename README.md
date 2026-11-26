@@ -68,12 +68,15 @@ python herramientas/scripts/menu.py --opcion 5 -- entrada.docx --json
 
 ```bash
 python herramientas/scripts/leer_documento.py usuario/datos/entrada/informe.docx --json
+python herramientas/scripts/leer_documento.py expediente-viejo.doc --texto
 python herramientas/scripts/leer_documento.py escaneo.png --texto
 ```
 
 `.docx`, `.csv`, `.md` y `.txt` no necesitan nada instalado. `.pdf` y `.xlsx`
-usan las dependencias de `requirements.txt`. Las imágenes (`.png`, `.jpg`,
-`.tif`, `.bmp`, `.webp`) se leen con OCR opcional — si falta, el error dice qué
+usan las dependencias de `requirements.txt`. Los **formatos viejos** (`.doc`,
+`.xls`, `.rtf`, `.odt`, `.ods`) se convierten a un temporal con LibreOffice y se
+leen de ahí: el original no se toca. Las imágenes (`.png`, `.jpg`, `.tif`,
+`.bmp`, `.webp`) se leen con OCR opcional — si falta, el error dice qué
 instalar. Detalle del contrato de salida:
 [`herramientas/docs/lectura-de-documentos.md`](herramientas/docs/lectura-de-documentos.md).
 

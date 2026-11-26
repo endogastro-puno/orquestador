@@ -72,7 +72,7 @@ ACCIONES: list[dict] = [
     },
     {
         "numero": 5,
-        "etiqueta": "Leer un documento (Word, PDF, Excel, CSV, texto, imagen)",
+        "etiqueta": "Leer un documento (Word/Excel, también .doc y .xls viejos; PDF, texto, imagen)",
         "script": "leer_documento.py",
         "workspace": False,
         "pide": "pide_ruta",

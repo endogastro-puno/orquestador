@@ -1,27 +1,37 @@
 #!/usr/bin/env python3
 """Lee documentos y devuelve su contenido de forma utilizable.
 
-Convierte un insumo —`.docx`, `.pdf`, `.xlsx`, `.csv`, `.md`, `.txt`— en texto y
-estructura, para que el agente trabaje sobre datos reales y no sobre suposiciones.
+Convierte un insumo —`.docx`, `.doc`, `.pdf`, `.xlsx`, `.xls`, `.csv`, `.md`,
+`.txt`— en texto y estructura, para que el agente trabaje sobre datos reales y no
+sobre suposiciones.
 
 Formatos y dependencias:
 
 | Formato | Cómo se lee | Dependencia |
 | --- | --- | --- |
-| `.docx` | OOXML directo (`zipfile` + `xml.etree`) | **ninguna** |
+| `.docx`, `.docm` | OOXML directo (`zipfile` + `xml.etree`) | **ninguna** |
 | `.pdf` | `pdfplumber`, o `pypdf` como respaldo | `requirements.txt` |
-| `.xlsx` | `openpyxl` | `requirements.txt` |
+| `.xlsx`, `.xlsm` | `openpyxl` | `requirements.txt` |
+| `.doc`, `.rtf`, `.odt` | LibreOffice → `.docx` en un temporal, y lector OOXML | `soffice` (LibreOffice) |
+| `.xls`, `.ods` | LibreOffice → `.xlsx` en un temporal, y `openpyxl` | `soffice` + `openpyxl` |
 | `.csv` | módulo `csv` | **ninguna** |
 | `.md`, `.txt` | lectura directa | **ninguna** |
 | `.png`, `.jpg`, `.jpeg`, `.tif`, `.tiff`, `.bmp`, `.webp` | OCR (`Pillow` + `pytesseract` + binario Tesseract) | opcional: ver `INSTALACION.md` |
 
-Nunca modifica el archivo: sólo lee. No escribe nada.
+Los formatos viejos de Office se convierten a un archivo temporal y se leen de
+ahí: el original **nunca se modifica**. Si falta LibreOffice, el comando falla
+diciendo exactamente qué instalar; no devuelve texto vacío como si el documento
+no tuviera nada.
+
+Nunca modifica el archivo: sólo lee. La conversión de formatos viejos escribe en
+un temporal que se borra al terminar; en tus carpetas no escribe nada.
 
 Uso::
 
     python herramientas/scripts/leer_documento.py usuario/datos/entrada/informe.docx
     python herramientas/scripts/leer_documento.py planilla.xlsx --json
     python herramientas/scripts/leer_documento.py contrato.pdf --texto
+    python herramientas/scripts/leer_documento.py expediente-viejo.doc --texto
     python herramientas/scripts/leer_documento.py escaneo.png --texto
 
 Contrato de salida (`--json`):
@@ -30,6 +40,8 @@ Contrato de salida (`--json`):
 * `.docx`: `parrafos`, `tablas`;
 * `.pdf`: `paginas` (una entrada por página, con `numero` y `texto`);
 * `.xlsx`: `hojas` (una entrada por hoja, con `nombre` y `filas`);
+* formatos viejos (`.doc`, `.xls`, `.rtf`, `.odt`, `.ods`): las claves del
+  formato convertido, más `metadatos.convertido_con` y `convertido_a`;
 * imágenes: `pixeles` en `metadatos` (ancho x alto).
 
 Las claves que no aplican al formato no aparecen. `texto` es la versión plana,
@@ -46,7 +58,11 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
+import shutil
+import subprocess
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -69,8 +85,15 @@ NS_CORE = {
 
 SOPORTADOS = (
     ".docx",
+    ".docm",
+    ".doc",
+    ".rtf",
+    ".odt",
     ".pdf",
     ".xlsx",
+    ".xlsm",
+    ".xls",
+    ".ods",
     ".csv",
     ".md",
     ".txt",
@@ -81,6 +104,21 @@ SOPORTADOS = (
     ".tiff",
     ".bmp",
     ".webp",
+)
+
+# Formatos viejos o de otro paquete: se convierten a OOXML en un temporal y se
+# leen con el lector de siempre. El original nunca se toca.
+LEGACY = {
+    ".doc": "docx",
+    ".rtf": "docx",
+    ".odt": "docx",
+    ".xls": "xlsx",
+    ".ods": "xlsx",
+}
+
+COMO_INSTALAR_LIBREOFFICE = (
+    "winget install TheDocumentFoundation.LibreOffice  "
+    "(o guardá el archivo como .docx/.xlsx desde Word o Excel)"
 )
 
 
@@ -280,10 +318,107 @@ def leer_imagen(ruta: Path) -> dict[str, Any]:
     return resultado
 
 
+def _soffice() -> str | None:
+    """Ruta al ejecutable de LibreOffice, o None si no está instalado."""
+    ruta = shutil.which("soffice")
+    if ruta:
+        return ruta
+    for variable in ("ProgramFiles", "ProgramFiles(x86)"):
+        base = os.environ.get(variable)
+        if base:
+            candidato = Path(base) / "LibreOffice" / "program" / "soffice.exe"
+            if candidato.is_file():
+                return str(candidato)
+    mac = Path("/Applications/LibreOffice.app/Contents/MacOS/soffice")
+    if mac.is_file():
+        return str(mac)
+    return None
+
+
+def _convertir_con_libreoffice(ruta: Path, destino: str, trabajo: Path) -> Path:
+    """Convierte ``ruta`` a ``destino`` dentro de ``trabajo`` y devuelve la copia."""
+    soffice = _soffice()
+    if soffice is None:
+        raise ValueError(
+            f"leer un '{ruta.suffix.lower()}' necesita LibreOffice para convertir "
+            f"a .{destino} (el original no se toca): {COMO_INSTALAR_LIBREOFFICE}"
+        )
+
+    # Perfil propio: si LibreOffice ya está abierto con el perfil del usuario,
+    # la conversión headless se cuelga o falla.
+    perfil = trabajo / "perfil"
+    try:
+        resultado = subprocess.run(
+            [
+                soffice,
+                "--headless",
+                "--norestore",
+                f"-env:UserInstallation={perfil.as_uri()}",
+                "--convert-to",
+                destino,
+                "--outdir",
+                str(trabajo),
+                str(ruta),
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            stdin=subprocess.DEVNULL,
+            timeout=180,
+        )
+    except subprocess.TimeoutExpired:
+        raise ValueError(
+            f"LibreOffice tardó más de 180 s en convertir {ruta.name}; "
+            f"probá abrirlo y guardarlo como .{destino}"
+        ) from None
+    except OSError as error:
+        raise ValueError(f"no se pudo ejecutar LibreOffice: {error}") from None
+
+    convertido = trabajo / f"{ruta.stem}.{destino}"
+    if not convertido.is_file() or convertido.stat().st_size == 0:
+        # Algunos nombres con caracteres raros hacen que LibreOffice cambie el
+        # nombre de salida: vale cualquier archivo con la extensión pedida.
+        candidatos = sorted(trabajo.glob(f"*.{destino}"))
+        convertido = candidatos[0] if candidatos else convertido
+    if not convertido.is_file() or convertido.stat().st_size == 0:
+        detalle = (resultado.stderr or resultado.stdout or "").strip()
+        detalle = detalle.splitlines()[-1][:200] if detalle else "sin detalle"
+        raise ValueError(
+            f"LibreOffice no pudo convertir {ruta.name} a .{destino}: {detalle}"
+        )
+    return convertido
+
+
+def leer_legacy(ruta: Path) -> dict[str, Any]:
+    """Lee `.doc`, `.xls`, `.rtf`, `.odt` u `.ods` vía LibreOffice.
+
+    Convierte a un temporal y delega en el lector OOXML. El original no se
+    modifica; el resultado conserva el formato original para que el índice y
+    el usuario sepan qué clase de archivo era.
+    """
+    formato = ruta.suffix.lower()
+    destino = LEGACY[formato]
+    with tempfile.TemporaryDirectory(prefix="orquestador-legacy-") as temporal:
+        convertido = _convertir_con_libreoffice(ruta, destino, Path(temporal))
+        resultado = (leer_docx if destino == "docx" else leer_xlsx)(convertido)
+
+    metadatos = dict(resultado.get("metadatos") or {})
+    metadatos["convertido_con"] = "libreoffice"
+    metadatos["convertido_a"] = f".{destino}"
+    return {
+        **resultado,
+        "formato": formato.lstrip("."),
+        "metadatos": metadatos,
+    }
+
+
 LECTORES = {
     ".docx": leer_docx,
+    ".docm": leer_docx,
     ".pdf": leer_pdf,
     ".xlsx": leer_xlsx,
+    ".xlsm": leer_xlsx,
     ".csv": leer_csv,
     ".md": leer_texto,
     ".txt": leer_texto,
@@ -295,6 +430,7 @@ LECTORES = {
     ".bmp": leer_imagen,
     ".webp": leer_imagen,
 }
+LECTORES.update({extension: leer_legacy for extension in LEGACY})
 
 
 def leer(ruta: Path) -> dict[str, Any]:
@@ -314,10 +450,12 @@ def leer(ruta: Path) -> dict[str, Any]:
         referencia = ruta.resolve().as_posix()
     return {
         "ok": True,
-        "formato": resultado["formato"],
         "ruta": referencia,
         "bytes": ruta.stat().st_size,
         **resultado,
+        # El formato es el del archivo que pasó el usuario: `.docm` sigue siendo
+        # `.docm` aunque por dentro se lea como OOXML.
+        "formato": formato.lstrip("."),
     }
 
 

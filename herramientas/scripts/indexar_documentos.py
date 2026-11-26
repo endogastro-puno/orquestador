@@ -260,6 +260,9 @@ def indexar(
     escaneados = sum(1 for entrada in entradas if entrada.get("escaneado"))
     con_ocr_ok = sum(1 for entrada in entradas if entrada.get("texto_ocr"))
     ocr_errores = sum(1 for entrada in entradas if entrada.get("ocr_error"))
+    convertidos = sum(
+        1 for entrada in entradas if (entrada.get("metadatos") or {}).get("convertido_con")
+    )
 
     entradas.sort(key=lambda entrada: entrada["ruta"])
     indice = {
@@ -285,6 +288,7 @@ def indexar(
         "escaneados": escaneados,
         "con_ocr": con_ocr_ok,
         "ocr_errores": ocr_errores,
+        "convertidos": convertidos,
     }
 
 
@@ -346,6 +350,9 @@ def main(argv: list[str] | None = None) -> int:
     if resumen["escaneados"]:
         print(f"PDF escaneados: {resumen['escaneados']} — sin texto extraíble; se buscan con "
               "buscar_documentos.py --escaneados")
+    if resumen.get("convertidos"):
+        print(f"Convertidos con LibreOffice: {resumen['convertidos']} — formatos viejos "
+              "(.doc/.xls); el original no se tocó")
     if resumen.get("con_ocr"):
         print(f"Con OCR: {resumen['con_ocr']} — su texto también se busca")
     if resumen.get("ocr_errores"):

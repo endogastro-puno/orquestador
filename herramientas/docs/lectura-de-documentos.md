@@ -8,9 +8,11 @@ estructura para trabajar sobre datos reales.
 
 | Formato | Cómo se lee | Dependencia |
 | --- | --- | --- |
-| `.docx` | OOXML directo (`zipfile` + `xml.etree`) | **ninguna** |
+| `.docx`, `.docm` | OOXML directo (`zipfile` + `xml.etree`) | **ninguna** |
 | `.pdf` | `pdfplumber`; si no está, `pypdf` | `requirements.txt` |
-| `.xlsx` | `openpyxl`, en modo sólo lectura | `requirements.txt` |
+| `.xlsx`, `.xlsm` | `openpyxl`, en modo sólo lectura | `requirements.txt` |
+| `.doc`, `.rtf`, `.odt` | LibreOffice convierte a `.docx` en un temporal y se lee con OOXML | `soffice` (LibreOffice) |
+| `.xls`, `.ods` | LibreOffice convierte a `.xlsx` en un temporal y se lee con `openpyxl` | `soffice` + `openpyxl` |
 | `.csv` | módulo `csv` | **ninguna** |
 | `.md`, `.txt` | lectura directa | **ninguna** |
 | `.png`, `.jpg`, `.jpeg`, `.tif`, `.tiff`, `.bmp`, `.webp` | OCR: `Pillow` + `pytesseract` + binario Tesseract | opcional (`INSTALACION.md`) |
@@ -19,12 +21,19 @@ Un `.docx` es un ZIP con XML adentro: por eso se lee sin instalar nada. Eso
 importa: el formato más común del trabajo administrativo no agrega dependencias
 al repositorio.
 
+Los formatos **viejos** (`.doc`, `.xls`, `.rtf`, `.odt`, `.ods`) son la norma en
+carpetas de años: se convierten a un archivo temporal con LibreOffice y se leen
+de ahí. El original **nunca se modifica** y el `--json` conserva el formato real
+(`"formato": "doc"`) con `metadatos.convertido_a`. Si LibreOffice no está, el
+comando falla diciendo exactamente qué instalar.
+
 ## Uso
 
 ```bash
 python herramientas/scripts/leer_documento.py usuario/datos/entrada/informe.docx
 python herramientas/scripts/leer_documento.py planilla.xlsx --json
 python herramientas/scripts/leer_documento.py contrato.pdf --texto
+python herramientas/scripts/leer_documento.py expediente-viejo.doc --texto
 python herramientas/scripts/leer_documento.py nota.md --max-caracteres 500
 python herramientas/scripts/leer_documento.py escaneo.png --texto
 ```
@@ -51,12 +60,13 @@ Según el formato, además:
 
 | Clave | Formato | Contenido |
 | --- | --- | --- |
-| `parrafos` | `.docx` | Lista de párrafos con texto (sin vacíos). |
-| `tablas` | `.docx` | Lista de tablas; cada tabla es una lista de filas de celdas. |
+| `parrafos` | `.docx`, `.doc`, `.rtf`, `.odt` | Lista de párrafos con texto (sin vacíos). |
+| `tablas` | `.docx`, `.doc`, `.rtf`, `.odt` | Lista de tablas; cada tabla es una lista de filas de celdas. |
 | `paginas` | `.pdf` | Una entrada por página: `numero` y `texto`. |
-| `hojas` | `.xlsx` | Una entrada por hoja: `nombre` y `filas`. |
+| `hojas` | `.xlsx`, `.xls`, `.ods` | Una entrada por hoja: `nombre` y `filas`. |
 | `filas` | `.csv` | Filas crudas del archivo. |
 | `pixeles` | imágenes | En `metadatos`: ancho x alto de la imagen leída. |
+| `convertido_con` | formatos viejos | En `metadatos`: `libreoffice`; `convertido_a` dice a qué se convirtió (`.docx`/`.xlsx`). |
 | `aviso` | `.pdf`, imágenes | Sólo si no hay texto extraíble. |
 
 `ruta` se informa relativa al repositorio cuando el archivo está adentro; nunca
@@ -77,7 +87,9 @@ se filtran rutas absolutas de la máquina.
 
 ## Reglas
 
-1. **Sólo lee.** Nunca modifica el archivo ni escribe nada.
+1. **Sólo lee.** Nunca modifica el archivo. La conversión de formatos viejos
+   escribe en un temporal que se borra al terminar: en las carpetas del usuario
+   no escribe nada.
 2. **No inventa.** Si no puede leer —PDF escaneado sin OCR, formato no
    soportado— falla o avisa; no devuelve texto aproximado.
 3. **PDF escaneado**: un PDF que es una imagen no tiene texto extraíble. El
@@ -89,6 +101,12 @@ se filtran rutas absolutas de la máquina.
    tuviera nada. Con OCR y sin texto reconocible, devuelve `aviso` y sale con
    código `2`, igual que un PDF escaneado.
 5. **Un `.docx` corrupto** falla con error, no con texto vacío.
+6. **Formatos viejos**: `.doc`, `.xls`, `.rtf`, `.odt` y `.ods` se convierten a
+   un temporal con LibreOffice; el original no se toca. Sin LibreOffice el
+   comando falla con el mensaje exacto de qué instalar, no devuelve texto vacío.
+   La primera conversión puede tardar unos segundos (LibreOffice crea su perfil);
+   en una carpeta con muchos archivos viejos, el índice tarda más la primera vez
+   y después reutiliza lo ya convertido.
 
 ## Cuándo usarlo
 

@@ -109,7 +109,7 @@ preguntar.
 | **Node.js + npm** | `winget install OpenJS.NodeJS.LTS` | Generar `.docx` y leerlos | Sí, para Word |
 | **Paquete npm `docx`** | `npm install` | Crear documentos `.docx` | Sí, para Word |
 | **Pandoc** | `winget install JohnMacFarlane.Pandoc` | Leer `.docx` y convertir a Markdown | Sí, para Word |
-| **LibreOffice** | `winget install TheDocumentFoundation.LibreOffice` | Convertir a PDF, recalcular fórmulas de Excel, aceptar cambios | Sí, para Word/Excel/PDF |
+| **LibreOffice** | `winget install TheDocumentFoundation.LibreOffice` | Convertir a PDF, recalcular fórmulas de Excel, aceptar cambios y leer `.doc`/`.xls` viejos | Sí, para Word/Excel/PDF |
 | **Poppler** | `winget install oschwartz10612.Poppler` | `pdftoppm`: renderizar páginas para revisarlas | Sí, para Word/PDF |
 | **Tesseract OCR** | `winget install tesseract-ocr.tesseract` | Leer PDF escaneado (imagen) | No, sólo OCR |
 | **`pytesseract`** | `python herramientas/scripts/instalar_todo.py --si --con-ocr` (o `python -m pip install pytesseract`) | Puente Python → Tesseract | No, sólo OCR |

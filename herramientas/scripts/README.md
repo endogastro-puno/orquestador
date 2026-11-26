@@ -13,7 +13,7 @@ nunca modifican lo que el usuario ya tiene.**
 | `instalar_todo.py` | Instala lo que falte (Windows, `winget` + pip + npm) | **No escribe nada** |
 | `generar_documento.py` | Genera `.docx` desde un spec declarativo y los CSV | Crea un entregable nuevo; **nunca sobrescribe**. `--salida` se rechaza si el archivo existe o queda fuera de `usuario/entregables/` |
 | `listar_generadores.py` | Lista los generadores propios del usuario y los tipos que cubren | **No escribe nada**. Sólo lee `usuario/generadores/` |
-| `leer_documento.py` | Lee `.docx`, `.pdf`, `.xlsx`, `.csv`, `.md`, `.txt` e imágenes (OCR); devuelve texto y estructura | **No escribe nada**. Sólo lee |
+| `leer_documento.py` | Lee `.docx`, `.doc`, `.pdf`, `.xlsx`, `.xls`, `.csv`, `.md`, `.txt` e imágenes (OCR); los formatos viejos se convierten con LibreOffice a un temporal; devuelve texto y estructura | **No escribe nada**. Sólo lee |
 | `menu.py` | Menú que lista y corre todas las facilidades; `--opcion N` las corre directo | **No escribe nada**. Sólo corre otros scripts |
 | `indexar_documentos.py` | Mapea una carpeta completa y guarda el índice incremental en `usuario/indice/`; `--con-ocr` reintenta escaneados con Tesseract | Sólo escribe el índice (regenerable); **los originales jamás se tocan** |
 | `buscar_documentos.py` | Consulta el índice: por nombre y por contenido (incluye `texto_ocr`), con filtros `--tipo`, `--carpeta`, `--escaneados` | **No escribe nada**. Sólo lee el índice |
@@ -111,6 +111,7 @@ python herramientas/scripts/generar_documento.py --tipo manual --sin-generador
 
 python herramientas/scripts/leer_documento.py usuario/datos/entrada/informe.docx --json
 python herramientas/scripts/leer_documento.py planilla.xlsx --texto
+python herramientas/scripts/leer_documento.py expediente-viejo.doc --texto
 python herramientas/scripts/leer_documento.py escaneo.png --texto
 
 python herramientas/scripts/menu.py

@@ -79,7 +79,7 @@ Resumen operativo:
 
 | Para… | Skill | Script |
 | --- | --- | --- |
-| Leer Word, PDF, Excel, CSV, texto, imágenes | — | `leer_documento.py` |
+| Leer Word, PDF, Excel, CSV, texto, imágenes (también `.doc`/`.xls` viejos) | — | `leer_documento.py` |
 | Leer un escaneado o foto | `pdf` | `ocr_documento.py` |
 | Mapear carpetas / buscar en el mapa | — | `indexar_documentos.py` / `buscar_documentos.py` |
 | Traer tu plantilla / crear una inicial | — | `instalar_plantilla.py` / `nueva_plantilla.py` |
@@ -262,7 +262,7 @@ Cerrá cada cambio de código con su línea de riesgo (`Risk: ...`) cuando corre
 | `herramientas/scripts/instalar_todo.py` | Instala lo que falte: `--plan` muestra, `--si` ejecuta. Windows |
 | `herramientas/scripts/generar_documento.py` | Genera un documento desde `herramientas/contratos/tipos/<tipo>.json` y los CSV |
 | `herramientas/scripts/listar_generadores.py` | Lista los generadores propios del usuario en `usuario/generadores/` |
-| `herramientas/scripts/leer_documento.py` | Lee `.docx`, `.pdf`, `.xlsx`, `.csv`, `.md`, `.txt` e imágenes con OCR; devuelve texto y estructura |
+| `herramientas/scripts/leer_documento.py` | Lee `.docx`, `.doc`, `.pdf`, `.xlsx`, `.xls`, `.csv`, `.md`, `.txt` e imágenes con OCR; los formatos viejos se convierten con LibreOffice a un temporal; devuelve texto y estructura |
 | `herramientas/scripts/menu.py` | Menú interactivo que lista y corre todas las facilidades; `--opcion N` para uso directo |
 | `herramientas/scripts/instalar_plantilla.py` | Copia una plantilla existente del usuario a `plantillas/propias/` con el nombre canónico |
 | `herramientas/scripts/nueva_plantilla.py` | Crea una plantilla inicial sobria (`.docx`, `.xlsx` o `.md`) para un tipo |

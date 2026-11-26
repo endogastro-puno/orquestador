@@ -16,7 +16,7 @@ python herramientas/scripts/menu.py
 
 | Habilidad | Skill | Script | Necesita instalado |
 | --- | --- | --- | --- |
-| Leer Word, PDF con texto, Excel, CSV, texto e imágenes | — | `leer_documento.py` | `.docx`/`.csv`/`.md`/`.txt`: nada; `.pdf`: `pdfplumber` o `pypdf`; `.xlsx`: `openpyxl`; imágenes: cadena OCR |
+| Leer Word, PDF con texto, Excel, CSV, texto e imágenes —incluidos los `.doc`/`.xls` viejos— | — | `leer_documento.py` | `.docx`/`.docm`/`.csv`/`.md`/`.txt`: nada; `.pdf`: `pdfplumber` o `pypdf`; `.xlsx`/`.xlsm`: `openpyxl`; `.doc`/`.xls`/`.rtf`/`.odt`/`.ods`: LibreOffice (`soffice`); imágenes: cadena OCR |
 | Leer un PDF escaneado o una foto | `pdf` (extracción y OCR) | `ocr_documento.py` | Tesseract + `pytesseract` + `Pillow`; y para PDF: `pdf2image` + `pdftoppm` |
 | Mapear una carpeta completa (el mapa) | — | `indexar_documentos.py [--con-ocr]` | Lo mismo que leer; `--con-ocr` suma la cadena OCR |
 | Buscar por nombre y por contenido en el mapa | — | `buscar_documentos.py` | Nada (lee el índice) |
