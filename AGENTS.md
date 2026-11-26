@@ -254,7 +254,8 @@ Cerrá cada cambio de código con su línea de riesgo (`Risk: ...`) cuando corre
 
 | Script | Uso |
 | --- | --- |
-| `herramientas/scripts/init_local.py` | Primera vez: crea carpetas del usuario y copia contratos a datos reales |
+| `herramientas/scripts/empezar.py` | Primer arranque completo: verifica entorno, instala si se pide, crea carpetas, copia contratos y deja una plantilla base por tipo. `--plan` no escribe |
+| `herramientas/scripts/init_local.py` | Sólo estructura: crea carpetas del usuario y copia contratos a datos reales |
 | `herramientas/scripts/validar_datos.py` | Valida `usuario/datos/`; `--estricto` falla si queda algún `PENDIENTE` |
 | `herramientas/scripts/nuevo_entregable.py` | Resuelve la ruta del entregable; `--selftest` verifica la lógica |
 | `herramientas/scripts/verificar_limites.py` | Comprueba que nada de `usuario/` esté versionado |
@@ -281,10 +282,10 @@ python -m unittest discover -s herramientas/tests -v
 ```
 
 Si el usuario dice que no puede instalar o que no entiende la terminal, la
-respuesta es `python herramientas/scripts/instalar_todo.py --plan` para ver qué
-falta y luego el mismo comando con `--si`. La guía tiene una sección
-«Instalación sin vueltas» pensada para usuarios no técnicos: no la reemplaces por
-una lista de comandos sueltos.
+respuesta es `python herramientas/scripts/empezar.py`: un solo comando que
+revisa qué falta, pregunta si lo instala y deja todo preparado. La guía tiene
+una sección «Instalación sin vueltas» pensada para usuarios no técnicos: no la
+reemplaces por una lista de comandos sueltos.
 
 ## Versionado y privacidad
 

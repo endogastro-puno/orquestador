@@ -12,6 +12,13 @@ El punto de entrada para quien no quiere memorizar nada:
 python herramientas/scripts/menu.py
 ```
 
+El punto de entrada para quien acaba de clonar el repositorio y no quiere armar
+nada a mano —entorno, carpetas, datos base y una plantilla de cada tipo—:
+
+```bash
+python herramientas/scripts/empezar.py
+```
+
 ## Leer: del archivo suelto al texto usable
 
 | Habilidad | Skill | Script | Necesita instalado |
@@ -57,6 +64,7 @@ Tipos, datos obligatorios y esqueletos: `tipos-de-documento.md`. Flujo de
 | --- | --- | --- |
 | Ver qué falta instalar (por formato) | `verificar_entorno.py [--formato docx\|xlsx\|pdf]` | Nada |
 | Instalar lo que falte (Windows; `--con-ocr` incluye Tesseract + `pytesseract`) | `instalar_todo.py [--plan\|--si] [--con-ocr]` | `winget` |
+| Dejar todo listo de una vez: entorno + carpetas + datos + plantillas (`--plan` no escribe) | `empezar.py [--plan\|--si\|--sin-instalar\|--sin-plantillas]` | Nada para la estructura; lo que pida `instalar_todo.py` si decidís instalar |
 | Crear tu estructura y tus datos (sin pisar) | `init_local.py` | Nada |
 | Validar tus datos contra los contratos | `validar_datos.py [--estricto]` | Nada |
 | Comprobar que nada tuyo quedó en git | `verificar_limites.py` | `git` |

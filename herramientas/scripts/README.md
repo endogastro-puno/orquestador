@@ -5,6 +5,7 @@ nunca modifican lo que el usuario ya tiene.**
 
 | Script | Qué hace | Escribe en la zona del usuario |
 | --- | --- | --- |
+| `empezar.py` | Primer arranque completo: revisa el entorno, ofrece instalar lo que falta, crea las carpetas, copia los contratos y deja una plantilla base por tipo. `--plan` sólo muestra; `--sin-instalar` y `--sin-plantillas` recortan el alcance | Sólo archivos que **no existen**. Nunca sobrescribe ni completa `PENDIENTE`. Respeta plantillas y datos que ya tenga el usuario |
 | `init_local.py` | Crea las carpetas de `usuario/` y copia cada contrato a su archivo real | Sólo archivos que **no existen**. Nunca sobrescribe. |
 | `validar_datos.py` | Valida `usuario/datos/` contra `herramientas/contratos/` | **No escribe nada** |
 | `nuevo_entregable.py` | Resuelve la ruta `usuario/entregables/<tipo>/AAAA-MM-DD_slug.ext` | Sólo crea la carpeta destino |
@@ -96,6 +97,9 @@ python herramientas/scripts/instalar_todo.py          # instala y verifica
 python herramientas/scripts/verificar_entorno.py
 python herramientas/scripts/verificar_entorno.py --formato docx
 
+python herramientas/scripts/empezar.py                # entorno + estructura + datos + plantillas
+python herramientas/scripts/empezar.py --plan         # qué haría, sin escribir
+python herramientas/scripts/empezar.py --selftest
 python herramientas/scripts/init_local.py
 python herramientas/scripts/validar_datos.py
 python herramientas/scripts/validar_datos.py --estricto

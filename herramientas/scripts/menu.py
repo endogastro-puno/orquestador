@@ -140,6 +140,13 @@ ACCIONES: list[dict] = [
         "workspace": True,
         "pide": "pide_ocr",
     },
+    {
+        "numero": 15,
+        "etiqueta": "Empezar de cero: deja todo listo en un solo paso",
+        "script": "empezar.py",
+        "workspace": True,
+        "pide": None,
+    },
 ]
 
 PIDE = {}  # se llena abajo con los nombres declarados en ACCIONES
@@ -240,9 +247,21 @@ def correr(accion: dict, extra: list[str], workspace: str | None) -> int:
     return resultado.returncode
 
 
-def mostrar_menu() -> None:
+def necesita_primer_arranque(workspace: str | None = None) -> bool:
+    """¿Falta lo mínimo para trabajar? Mira si los datos base ya existen."""
+    try:
+        espacio = ws.resolver(workspace)
+    except OSError:
+        return True
+    return not (espacio / "datos" / "organizacion" / "entidad.csv").is_file()
+
+
+def mostrar_menu(workspace: str | None = None) -> None:
     print()
     print("Orquestador documental — qué querés hacer")
+    if necesita_primer_arranque(workspace):
+        print()
+        print("  Primera vez: elegí la opción 15 y queda todo preparado.")
     print()
     for accion in ACCIONES:
         print(f"  {accion['numero']:>2}. {accion['etiqueta']}")
@@ -274,7 +293,7 @@ def main(argv: list[str] | None = None) -> int:
         return correr(accion, extra, args.workspace)
 
     while True:
-        mostrar_menu()
+        mostrar_menu(args.workspace)
         eleccion = input("Opción: ").strip()
         if not eleccion:
             continue

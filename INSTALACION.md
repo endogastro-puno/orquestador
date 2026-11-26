@@ -21,15 +21,23 @@ falta leer nada más.
    apretá **Enter**:
 
    ```powershell
-   python herramientas/scripts/instalar_todo.py
+   python herramientas/scripts/empezar.py
    ```
 
-4. Te va a mostrar una lista de lo que va a instalar. Escribí **`S`** y apretá
-   **Enter**.
+4. El comando revisa qué le falta a la PC y te pregunta si lo instala. Apretá
+   **Enter** (la respuesta ya viene en «sí»).
 5. Windows te va a pedir permiso para instalar programas. **Aceptá** (decir que
    sí).
 6. Esperá. Puede tardar entre **5 y 20 minutos** según tu internet. **No cierres
    la ventana** y no aprietes teclas mientras trabaja.
+
+Al terminar, ese mismo comando ya te dejó:
+
+- tus carpetas en `usuario/`,
+- tus archivos de datos base (los completás después),
+- una plantilla inicial de cada tipo de documento.
+
+No tenés que crear nada desde cero.
 
 ### Cómo sé si terminó bien
 
@@ -303,16 +311,30 @@ necesitan nada: usan sólo la biblioteca estándar de Python.
 
 ## Puesta en marcha del repositorio
 
-Con el entorno listo, falta preparar tu zona de trabajo:
+Si querés preparar tu zona sin instalar nada —o ya lo hiciste antes—, un solo
+comando deja todo listo:
+
+```powershell
+python herramientas/scripts/empezar.py
+```
+
+Crea las carpetas de `usuario/`, copia cada contrato de
+`herramientas/contratos/` a su archivo real en `usuario/datos/` y crea una
+plantilla inicial por tipo. Sólo escribe lo que **no existe**: nunca sobrescribe
+nada tuyo, y podés correrlo las veces que quieras. Opciones útiles:
+
+```powershell
+python herramientas/scripts/empezar.py --plan           # muestra el plan, no escribe
+python herramientas/scripts/empezar.py --sin-instalar   # sin tocar programas
+python herramientas/scripts/empezar.py --sin-plantillas # sólo carpetas y datos
+```
+
+Si preferís el paso mínimo, `init_local.py` sigue existiendo y hace sólo la
+estructura y los datos:
 
 ```powershell
 python herramientas/scripts/init_local.py
 ```
-
-Crea las carpetas de `usuario/` y copia cada contrato de
-`herramientas/contratos/` a su archivo real en `usuario/datos/`. Sólo si el
-archivo **no existe**: nunca sobrescribe nada tuyo, y podés correrlo las veces
-que quieras.
 
 Después:
 
@@ -371,7 +393,7 @@ python herramientas/scripts/validar_datos.py --estricto
 Para usuario no técnico, un solo comando:
 
 ```text
-python herramientas/scripts/instalar_todo.py
+python herramientas/scripts/empezar.py
 ```
 
 Detalle técnico:
@@ -384,7 +406,8 @@ Programas del sistema: Pandoc  ·  LibreOffice  ·  Poppler  (+ Tesseract opcion
 OCR completo:          python herramientas/scripts/instalar_todo.py --si --con-ocr
 Verificar:             python herramientas/scripts/verificar_entorno.py
 Instalar lo que falta: python herramientas/scripts/instalar_todo.py --si
-Preparar tu zona:      python herramientas/scripts/init_local.py
+Preparar tu zona:      python herramientas/scripts/empezar.py
+Sólo estructura:       python herramientas/scripts/init_local.py
 ¿Funciona acá?:        python herramientas/scripts/selftest.py
 Leer un insumo:        python herramientas/scripts/leer_documento.py <archivo>
 Leer un escaneado:     python herramientas/scripts/ocr_documento.py <archivo>

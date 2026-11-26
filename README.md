@@ -207,14 +207,31 @@ biblioteca estándar.
 
 ## Puesta en marcha
 
+Un solo comando deja la PC lista — estructura, datos base y una plantilla por tipo:
+
 ```bash
-python herramientas/scripts/init_local.py     # crea tus carpetas y tus archivos de datos
+python herramientas/scripts/empezar.py
+```
+
+Revisa el entorno, ofrece instalar lo que falta, crea tus carpetas, copia los datos base
+y deja las **12 plantillas iniciales** (una por tipo). Nunca pisa nada: si ya tenés un
+dato o una plantilla de ese tipo, la respeta. Antes de escribir podés ver el plan:
+
+```bash
+python herramientas/scripts/empezar.py --plan           # qué haría, sin tocar nada
+python herramientas/scripts/empezar.py --si             # sin preguntar
+python herramientas/scripts/empezar.py --sin-plantillas # sólo carpetas y datos
+```
+
+Después completás cada `PENDIENTE` de tus datos y validás:
+
+```bash
 python herramientas/scripts/validar_datos.py  # confirma que la fuente quedó consistente
 ```
 
-`init_local.py` copia cada contrato de `herramientas/contratos/` a tu archivo real en
+`empezar.py` copia cada contrato de `herramientas/contratos/` a tu archivo real en
 `usuario/datos/`. **Sólo si el archivo no existe**: nunca sobrescribe lo que ya tenés.
-Después completás cada `PENDIENTE` y actualizás la clave `actualizado`.
+Los `PENDIENTE` los completás vos: el agente no inventa datos.
 
 ## Estructura
 
@@ -256,6 +273,7 @@ orquestador/
     ├── ejemplos/                   # ejemplo de generador propio
     └── scripts/
         ├── menu.py                 # todas las facilidades, sin memorizar comandos
+        ├── empezar.py              # primer arranque: entorno + estructura + datos + plantillas
         ├── init_local.py           # crea tu estructura y tus datos
         ├── validar_datos.py        # valida tus datos contra los contratos
         ├── nuevo_entregable.py     # resuelve la ruta con la convención de nombres
