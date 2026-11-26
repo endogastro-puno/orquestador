@@ -119,6 +119,20 @@ ACCIONES: list[dict] = [
         "workspace": False,
         "pide": None,
     },
+    {
+        "numero": 12,
+        "etiqueta": "Indexar una carpeta (mapa de mis documentos)",
+        "script": "indexar_documentos.py",
+        "workspace": True,
+        "pide": "pide_carpeta",
+    },
+    {
+        "numero": 13,
+        "etiqueta": "Buscar en mis documentos indexados",
+        "script": "buscar_documentos.py",
+        "workspace": True,
+        "pide": "pide_busqueda",
+    },
 ]
 
 PIDE = {}  # se llena abajo con los nombres declarados en ACCIONES
@@ -180,6 +194,20 @@ def pide_tipo_declarativo() -> list[str]:
     if not tipo:
         raise ValueError("hace falta el tipo")
     return ["--tipo", tipo]
+
+
+@registrar("pide_carpeta")
+def pide_carpeta() -> list[str]:
+    ruta = input("Carpeta a mapear (ej: D:\\FOLDER-PRINCIPAL): ").strip().strip('"')
+    if not ruta:
+        raise ValueError("hace falta la carpeta")
+    return ["--ruta", ruta]
+
+
+@registrar("pide_busqueda")
+def pide_busqueda() -> list[str]:
+    consulta = input("Qué buscás (Enter = listar con filtros): ").strip()
+    return [consulta] if consulta else []
 
 
 def construir_comando(accion: dict, extra: list[str], workspace: str | None) -> list[str]:

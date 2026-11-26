@@ -77,6 +77,24 @@ usan las dependencias de `requirements.txt`. Las imágenes (`.png`, `.jpg`,
 instalar. Detalle del contrato de salida:
 [`herramientas/docs/lectura-de-documentos.md`](herramientas/docs/lectura-de-documentos.md).
 
+## El mapa de tus documentos
+
+Tus carpetas pueden ser una selva — `FOLDER-PRINCIPAL` con subcarpetas por todos
+lados. No hace falta recorrerlas a pie cada vez: se mapean **una vez** y después
+se busca en el mapa, en milisegundos:
+
+```bash
+python herramientas/scripts/indexar_documentos.py --ruta D:\FOLDER-PRINCIPAL
+python herramientas/scripts/buscar_documentos.py "cotización de mantenimiento"
+python herramientas/scripts/buscar_documentos.py --escaneados
+```
+
+La primera pasada lee cada Word y PDF y guarda el índice en `indice/` (tu zona,
+nunca en git). El índice es **incremental**: volver a correrla sólo relee lo que
+cambió. La búsqueda encuentra por nombre **y por el texto de adentro**, sin
+tildes ni mayúsculas. Y los **PDF escaneados quedan marcados**: saber dónde están
+todos los que necesitan OCR es una sola consulta.
+
 ## Tu plantilla, la que ya tenés
 
 No hace falta rediseñar nada: si ya tenés un membrete o una planilla que usás
@@ -223,6 +241,8 @@ orquestador/
         ├── leer_documento.py       # lee Word, PDF, Excel, CSV, texto e imágenes (OCR)
         ├── instalar_plantilla.py   # trae tu plantilla existente a plantillas/propias/
         ├── nueva_plantilla.py      # crea una plantilla inicial sobria
+        ├── indexar_documentos.py   # mapea una carpeta completa (índice incremental)
+        ├── buscar_documentos.py    # busca en el índice: nombres y contenido
         ├── listar_generadores.py   # lista tu plantilla en código, si tenés una
         ├── selftest.py             # prueba de humo: ¿el motor funciona acá?
         └── verificar_entorno.py    # comprueba que el entorno tenga todo instalado

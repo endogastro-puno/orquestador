@@ -41,6 +41,7 @@ convención de estilo.
 | `usuario/recursos/logos/` | **Sólo lectura** | Se insertan tal cual, sin recortar ni recolorear |
 | `usuario/recursos/firmas/` | **Sólo lectura** | Imágenes de firma |
 | `usuario/entregables/` | **Crear archivos nuevos** | Nunca editar ni borrar uno existente sin pedido explícito |
+| `usuario/indice/` | **Regenerable** | Lo crea `indexar_documentos.py`; se puede borrar y reconstruir. Nunca se versiona |
 
 Prohibido en toda la zona del usuario, sin excepción: escribir o crear archivos (salvo
 `usuario/entregables/`), renombrar, mover, borrar, completar valores `PENDIENTE` y
@@ -80,6 +81,7 @@ La regla de zona no cambia: sólo cambia la carpeta donde vive.
 | `usuario/generadores/` | Plantilla del usuario escrita en código (Python o JS) | usuario |
 | `usuario/recursos/logos/` · `firmas/` | Identidad visual y firmas | usuario |
 | `usuario/entregables/word/` `pdf/` `excel/` `markdown/` `borradores/` | Salidas | usuario |
+| `usuario/indice/` | Mapa de las carpetas indexadas; regenerable | usuario |
 | `herramientas/contratos/` | Contratos `*.example` de la fuente de datos | nosotros |
 | `herramientas/scripts/` | Inicialización, validación, rutas y verificación de límites | nosotros |
 | `herramientas/tests/` | Pruebas de regresión (sólo biblioteca estándar) | nosotros |
@@ -104,6 +106,10 @@ Detalle completo en `herramientas/docs/flujo-de-trabajo.md`. Resumen:
    Si el pedido trae insumos (Word, PDF, Excel) en `usuario/datos/entrada/`, se leen
    con `python herramientas/scripts/leer_documento.py <archivo> --json`. Un insumo que
    no se leyó no se usa: no se resume de memoria.
+   Si el usuario no sabe dónde está un archivo, se busca en el índice con
+   `python herramientas/scripts/buscar_documentos.py "<texto>" --json`; si la raíz
+   aún no está mapeada, primero
+   `python herramientas/scripts/indexar_documentos.py --ruta <carpeta>`.
 3. **Resolver la plantilla** con la precedencia de la sección siguiente. Si el
    usuario trae su propia plantilla en cualquier ruta de su máquina, se copia con
    `python herramientas/scripts/instalar_plantilla.py --origen <ruta> --tipo <tipo>`:
@@ -241,6 +247,8 @@ Cerrá cada cambio de código con su línea de riesgo (`Risk: ...`) cuando corre
 | `herramientas/scripts/menu.py` | Menú interactivo que lista y corre todas las facilidades; `--opcion N` para uso directo |
 | `herramientas/scripts/instalar_plantilla.py` | Copia una plantilla existente del usuario a `plantillas/propias/` con el nombre canónico |
 | `herramientas/scripts/nueva_plantilla.py` | Crea una plantilla inicial sobria (`.docx`, `.xlsx` o `.md`) para un tipo |
+| `herramientas/scripts/indexar_documentos.py` | Mapea una carpeta completa y guarda el índice incremental en `usuario/indice/` |
+| `herramientas/scripts/buscar_documentos.py` | Busca en el índice por nombre y contenido, con filtros (`--tipo`, `--escaneados`) |
 | `herramientas/scripts/selftest.py` | Prueba de humo del motor en un temporal; no toca `usuario/` |
 
 Detalle y reglas para scripts nuevos en `herramientas/scripts/README.md`.

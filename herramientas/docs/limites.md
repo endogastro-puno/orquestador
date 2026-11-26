@@ -34,6 +34,7 @@ Nunca lo escribe, lo deduce ni lo inventa.
 | `usuario/recursos/logos/` | **Sólo lectura** | Se insertan tal cual, sin recortar ni recolorear |
 | `usuario/recursos/firmas/` | **Sólo lectura** | Imágenes de firma |
 | `usuario/entregables/` | **Crear archivos nuevos** | Nunca editar ni borrar uno existente sin pedido explícito |
+| `usuario/indice/` | **Regenerable** | Lo crea `indexar_documentos.py`: el mapa de las carpetas del usuario. Se puede borrar y reconstruir; jamás se versiona (contiene texto de documentos privados) |
 
 Prohibido en toda la zona del usuario, sin excepción:
 
@@ -71,6 +72,8 @@ estructura esperada exista. Código de salida `1` si algo se rompió.
 | `init_local.py` | Copia contratos a `usuario/datos/` **sólo si el archivo no existe**. Nunca sobrescribe. Se puede correr mil veces. |
 | `validar_datos.py` | Sólo lee. No corrige ni completa nada. |
 | `nuevo_entregable.py` | Resuelve una ruta libre. Si el nombre está ocupado agrega `-v2`. Nunca sobrescribe. |
+| `instalar_plantilla.py` | Copia una plantilla que el usuario señala con `--origen`. Crea sólo si no existe; nunca pisa el original. |
+| `indexar_documentos.py` | Sólo **lee** los documentos del usuario; escribe únicamente el índice en `usuario/indice/`, que se puede borrar y reconstruir. |
 | Contratos `*.example` | Viven en `herramientas/contratos/`. Actualizar el contrato no altera los datos reales del usuario. |
 
 Consecuencia práctica: **podés actualizar el repositorio sin miedo**. Un `git pull`
@@ -106,12 +109,13 @@ usuario/
 ├── recursos/
 │   ├── logos/                 # logos e isotipos
 │   └── firmas/                # imágenes de firma
-└── entregables/
-    ├── word/                  # .docx
-    ├── pdf/                   # .pdf
-    ├── excel/                 # .xlsx
-    ├── markdown/              # .md
-    └── borradores/            # versiones de trabajo
+├── entregables/
+│   ├── word/                  # .docx
+│   ├── pdf/                   # .pdf
+│   ├── excel/                 # .xlsx
+│   ├── markdown/              # .md
+│   └── borradores/            # versiones de trabajo
+└── indice/                    # mapa de carpetas indexadas (regenerable, nunca se versiona)
 ```
 
 ### Espacio de trabajo: usar la herramienta con los datos en otro lado

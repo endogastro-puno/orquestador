@@ -47,6 +47,7 @@ SUBCARPETAS = (
     "entregables/excel",
     "entregables/markdown",
     "entregables/borradores",
+    "indice",
 )
 
 

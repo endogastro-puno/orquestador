@@ -134,7 +134,7 @@ def main(argv: list[str] | None = None) -> int:
     # 5. Inventario informativo
     print("\nInventario de la zona del usuario:")
     if espacio.exists():
-        for carpeta in ("datos", "plantillas", "generadores", "recursos", "entregables"):
+        for carpeta in ("datos", "plantillas", "generadores", "recursos", "entregables", "indice"):
             ruta = espacio / carpeta
             total = contar_archivos(ruta)
             print(f"  {carpeta:<12} {total} archivo(s)")

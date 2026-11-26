@@ -15,6 +15,8 @@ nunca modifican lo que el usuario ya tiene.**
 | `listar_generadores.py` | Lista los generadores propios del usuario y los tipos que cubren | **No escribe nada**. Sólo lee `usuario/generadores/` |
 | `leer_documento.py` | Lee `.docx`, `.pdf`, `.xlsx`, `.csv`, `.md`, `.txt` e imágenes (OCR); devuelve texto y estructura | **No escribe nada**. Sólo lee |
 | `menu.py` | Menú que lista y corre todas las facilidades; `--opcion N` las corre directo | **No escribe nada**. Sólo corre otros scripts |
+| `indexar_documentos.py` | Mapea una carpeta completa y guarda el índice incremental en `usuario/indice/` | Sólo escribe el índice (regenerable); **los originales jamás se tocan** |
+| `buscar_documentos.py` | Consulta el índice: por nombre y por contenido, con filtros `--tipo`, `--carpeta`, `--escaneados` | **No escribe nada**. Sólo lee el índice |
 | `instalar_plantilla.py` | Copia una plantilla que el usuario ya tiene a `plantillas/propias/` (o `oficiales/`) con el nombre canónico `<tipo>-<variante>.<ext>` | Sólo crea un archivo que **no existe**, con un `--origen` que el usuario pasa explícitamente. Nunca sobrescribe |
 | `nueva_plantilla.py` | Crea una plantilla inicial sobria (`.docx`, `.xlsx` o `.md`) para un tipo | Sólo crea un archivo que **no existe**. Nunca sobrescribe |
 | `selftest.py` | Prueba de humo: genera un documento en un temporal y comprueba el motor | **No escribe nada** en el repositorio |
@@ -45,6 +47,13 @@ explícito (dos plantillas del mismo tipo romperían la precedencia, así que no
 subproceso y devuelve su código de salida tal cual. Los tipos declarativos que
 ofrece descubrirlos de `herramientas/contratos/tipos/*.json`, no de una lista fija.
 
+`indexar_documentos.py` y `buscar_documentos.py` tampoco duplican lectura de
+formatos: el indexador usa los lectores de `leer_documento.py` (OOXML, pdfplumber,
+openpyxl, OCR) y guarda un JSON por raíz en `usuario/indice/`. El índice es
+incremental — compara tamaño y fecha, relee sólo lo que cambió — y marca los PDF
+escaneados para que `buscar_documentos.py --escaneados` los encuentre. Nunca se
+versiona: contiene texto de documentos privados del usuario.
+
 Los scripts de Python usan sólo la biblioteca estándar de Python 3.10+, salvo
 `generar_informe_ejecutivo.py` y los generadores propios del usuario (el ejemplo
 incluido), que usan `python-docx` — declarado en `requirements.txt`. Las skills de
@@ -65,9 +74,9 @@ python -m unittest discover -s herramientas/tests -v
 
 Sólo biblioteca estándar: no hace falta instalar `pytest` ni nada más. Cubren la
 detección de NVM, el trato de los requisitos opcionales, el contrato del
-verificador, el motor, los generadores propios, los lectores de documentos y las
-facilidades de plantillas y menú. Las pruebas de `.pdf`, `.xlsx` y OCR se saltean
-solas si falta la dependencia del formato.
+verificador, el motor, los generadores propios, los lectores de documentos, las
+facilidades de plantillas y menú, y el índice de documentos. Las pruebas de
+`.pdf`, `.xlsx` y OCR se saltean solas si falta la dependencia del formato.
 
 En Windows, si `python` apunta a una versión vieja, usá el lanzador: `py -3`.
 El repositorio necesita **Python 3.10 o superior**.
@@ -104,6 +113,12 @@ python herramientas/scripts/nueva_plantilla.py --tipo informe
 python herramientas/scripts/nueva_plantilla.py --selftest
 python herramientas/scripts/instalar_plantilla.py --selftest
 python herramientas/scripts/menu.py --selftest
+
+python herramientas/scripts/indexar_documentos.py --ruta D:\FOLDER-PRINCIPAL
+python herramientas/scripts/buscar_documentos.py "cotización" --tipo docx,pdf
+python herramientas/scripts/buscar_documentos.py --escaneados
+python herramientas/scripts/indexar_documentos.py --selftest
+python herramientas/scripts/buscar_documentos.py --selftest
 
 python herramientas/scripts/selftest.py
 
