@@ -71,6 +71,22 @@ python herramientas/scripts/init_local.py --workspace D:\clientes\clinica-a
 Un espacio externo no puede versionarse en git; `verificar_limites.py` lo informa.
 La regla de zona no cambia: sólo cambia la carpeta donde vive.
 
+## Habilidades y herramientas
+
+Catálogo único de lo que sabemos hacer: `herramientas/docs/habilidades.md`.
+Si una habilidad no está ahí, no existe: se pregunta antes de inventarla.
+Resumen operativo:
+
+| Para… | Skill | Script |
+| --- | --- | --- |
+| Leer Word, PDF, Excel, CSV, texto, imágenes | — | `leer_documento.py` |
+| Leer un escaneado o foto | `pdf` | `ocr_documento.py` |
+| Mapear carpetas / buscar en el mapa | — | `indexar_documentos.py` / `buscar_documentos.py` |
+| Traer tu plantilla / crear una inicial | — | `instalar_plantilla.py` / `nueva_plantilla.py` |
+| Redactar administrativo / documento largo | `internal-comms` / `doc-coauthoring` | — |
+| Generar `.docx` / planilla / PDF | `docx` / `xlsx` / `pdf` | `generar_documento.py` |
+| Todo desde un menú | — | `menu.py` |
+
 ## Mapa del repositorio
 
 | Ruta | Qué es | Dueño |
@@ -105,7 +121,10 @@ Detalle completo en `herramientas/docs/flujo-de-trabajo.md`. Resumen:
    documento usa, se pregunta por esos campos y se detiene.
    Si el pedido trae insumos (Word, PDF, Excel) en `usuario/datos/entrada/`, se leen
    con `python herramientas/scripts/leer_documento.py <archivo> --json`. Un insumo que
-   no se leyó no se usa: no se resume de memoria.
+   no se leyó no se usa: no se resume de memoria. Si el insumo es un PDF escaneado
+   (aviso + código 2) o una foto, se lee con
+   `python herramientas/scripts/ocr_documento.py <archivo> --json` (cadena OCR en
+   `herramientas/docs/ocr-de-documentos.md`).
    Si el usuario no sabe dónde está un archivo, se busca en el índice con
    `python herramientas/scripts/buscar_documentos.py "<texto>" --json`; si la raíz
    aún no está mapeada, primero
@@ -247,8 +266,9 @@ Cerrá cada cambio de código con su línea de riesgo (`Risk: ...`) cuando corre
 | `herramientas/scripts/menu.py` | Menú interactivo que lista y corre todas las facilidades; `--opcion N` para uso directo |
 | `herramientas/scripts/instalar_plantilla.py` | Copia una plantilla existente del usuario a `plantillas/propias/` con el nombre canónico |
 | `herramientas/scripts/nueva_plantilla.py` | Crea una plantilla inicial sobria (`.docx`, `.xlsx` o `.md`) para un tipo |
-| `herramientas/scripts/indexar_documentos.py` | Mapea una carpeta completa y guarda el índice incremental en `usuario/indice/` |
-| `herramientas/scripts/buscar_documentos.py` | Busca en el índice por nombre y contenido, con filtros (`--tipo`, `--escaneados`) |
+| `herramientas/scripts/indexar_documentos.py` | Mapea una carpeta completa y guarda el índice incremental en `usuario/indice/`; `--con-ocr` reintenta escaneados con Tesseract |
+| `herramientas/scripts/buscar_documentos.py` | Busca en el índice por nombre y contenido, con filtros (`--tipo`, `--escaneados`); también mira el `texto_ocr` |
+| `herramientas/scripts/ocr_documento.py` | Lee un PDF escaneado o foto con OCR; `--salida` guarda la transcripción en `entregables/` |
 | `herramientas/scripts/selftest.py` | Prueba de humo del motor en un temporal; no toca `usuario/` |
 
 Detalle y reglas para scripts nuevos en `herramientas/scripts/README.md`.

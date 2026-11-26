@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Menú de las facilidades del orquestador.
 
-Un usuario que instala el repo no debería tener que memorizar once comandos
+Un usuario que instala el repo no debería tener que memorizar los comandos
 para gozar de las herramientas: este menú los lista, pide lo mínimo que falta
 y los corre, pasando su código de salida tal cual.
 
@@ -133,6 +133,13 @@ ACCIONES: list[dict] = [
         "workspace": True,
         "pide": "pide_busqueda",
     },
+    {
+        "numero": 14,
+        "etiqueta": "Leer un escaneado con OCR (PDF o foto)",
+        "script": "ocr_documento.py",
+        "workspace": True,
+        "pide": "pide_ocr",
+    },
 ]
 
 PIDE = {}  # se llena abajo con los nombres declarados en ACCIONES
@@ -208,6 +215,14 @@ def pide_carpeta() -> list[str]:
 def pide_busqueda() -> list[str]:
     consulta = input("Qué buscás (Enter = listar con filtros): ").strip()
     return [consulta] if consulta else []
+
+
+@registrar("pide_ocr")
+def pide_ocr() -> list[str]:
+    ruta = input("Ruta del PDF escaneado o foto (arrastralo acá o pegá la ruta): ").strip().strip('"')
+    if not ruta:
+        raise ValueError("hace falta la ruta del archivo")
+    return [ruta, "--texto"]
 
 
 def construir_comando(accion: dict, extra: list[str], workspace: str | None) -> list[str]:

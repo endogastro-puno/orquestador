@@ -97,3 +97,5 @@ se filtran rutas absolutas de la máquina.
 - Para verificar un entregable propio: leer el `.docx` generado y comprobar que
   el contenido está donde debe.
 - Para extraer tablas de una planilla y cruzarlas contra `usuario/datos/tablas/`.
+- Si el PDF es escaneado (aviso + código 2) o el insumo es una foto: pasar a
+  `ocr_documento.py` (detalle en `ocr-de-documentos.md`).

@@ -23,6 +23,13 @@ Uso::
     python herramientas/scripts/indexar_documentos.py --ruta D:\\FOLDER-PRINCIPAL
     python herramientas/scripts/indexar_documentos.py --ruta D:\\FOLDER-PRINCIPAL --sin-texto
     python herramientas/scripts/indexar_documentos.py --ruta "D:\\FOLDER 1\\contrato.docx"
+    python herramientas/scripts/indexar_documentos.py --ruta D:\\FOLDER-PRINCIPAL --con-ocr
+
+Con ``--con-ocr`` los PDF escaneados y las imágenes sin texto se reintentan
+con Tesseract y el texto reconocido queda en ``texto_ocr``: la búsqueda lo
+encuentra igual que el texto normal. Necesita la cadena OCR
+(`ocr_documento.py`: Tesseract + `pytesseract`); si falta, el archivo igual
+queda en el índice, con su `ocr_error`.
 
 El índice vive en el espacio del usuario (``indice/``, creado por
 ``init_local.py``), un JSON por raíz: ``<slug>-<hash6>.json``. Nunca se
@@ -45,8 +52,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import leer_documento as lector  # noqa: E402
+import ocr_documento as mod_ocr  # noqa: E402
 import plantillas as pl  # noqa: E402
 import workspace as ws  # noqa: E402
+
+OCR_EXTS = (".pdf", *mod_ocr.EXTENSIONES_IMAGEN)
 
 # Carpetas que no aportan documentos y sí ruido (o candidatas a ciclos).
 CARPETAS_EXCLUIDAS = {
@@ -155,11 +165,39 @@ def _sello(entrada: dict) -> tuple | None:
     return (entrada.get("bytes"), entrada.get("mtime"))
 
 
+def _aplicar_ocr(entrada: dict, ruta: Path, idioma: str, dpi: int) -> dict:
+    """Reintenta con OCR una entrada sin texto (escaneado o imagen vacía).
+
+    Guarda `texto_ocr` y `ocr` (True si hubo texto). Si el OCR falla, guarda
+    `ocr_error` y deja `texto_ocr` en None: el mapa no se rompe por un OCR
+    que no corre. Nunca modifica el original: sólo lee.
+    """
+    try:
+        resultado = mod_ocr.ocr(ruta, idioma=idioma, dpi=dpi)
+    except Exception as error:
+        entrada["texto_ocr"] = None
+        entrada["ocr"] = False
+        entrada["ocr_error"] = str(error)
+        return entrada
+    texto = (resultado.get("texto") or "").strip()
+    entrada["texto_ocr"] = texto or None
+    entrada["ocr"] = bool(texto)
+    entrada["ocr_error"] = None
+    if texto:
+        metadatos = entrada.get("metadatos") or {}
+        metadatos["ocr"] = "tesseract"
+        entrada["metadatos"] = metadatos
+    return entrada
+
+
 def indexar(
     raiz: Path,
     espacio: Path,
     con_texto: bool = True,
     todo: bool = False,
+    con_ocr: bool = False,
+    idioma_ocr: str = "spa",
+    dpi_ocr: int = 300,
 ) -> dict:
     """Mapea ``raiz`` completa y devuelve el resumen de lo que hizo."""
     raiz = Path(raiz).resolve()
@@ -169,7 +207,11 @@ def indexar(
     destino = ruta_indice(espacio, raiz)
     anterior = cargar(destino)
     previos: dict[str, dict] = {}
-    if anterior and anterior.get("con_texto") == con_texto:
+    if (
+        anterior
+        and anterior.get("con_texto") == con_texto
+        and anterior.get("con_ocr", False) == con_ocr
+    ):
         previos = {entrada["ruta"]: entrada for entrada in anterior.get("archivos", [])}
 
     encontrados: dict[str, tuple] = {}
@@ -203,6 +245,11 @@ def indexar(
                 entrada = _entrada_simple(ruta, raiz, sello)
             else:
                 continue
+            if con_ocr and entrada.get("documento"):
+                extension = ruta.suffix.lower()
+                sin_texto = not (entrada.get("texto") or "").strip()
+                if extension in OCR_EXTS and (entrada.get("escaneado") or sin_texto):
+                    entrada = _aplicar_ocr(entrada, ruta, idioma_ocr, dpi_ocr)
             if previa is not None:
                 cambiados += 1
             else:
@@ -211,12 +258,16 @@ def indexar(
 
     errores = sum(1 for entrada in entradas if entrada.get("error"))
     escaneados = sum(1 for entrada in entradas if entrada.get("escaneado"))
+    con_ocr_ok = sum(1 for entrada in entradas if entrada.get("texto_ocr"))
+    ocr_errores = sum(1 for entrada in entradas if entrada.get("ocr_error"))
 
     entradas.sort(key=lambda entrada: entrada["ruta"])
     indice = {
         "raiz": str(raiz),
         "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "con_texto": con_texto,
+        "con_ocr": con_ocr,
+        "idioma_ocr": idioma_ocr if con_ocr else None,
         "documentos": sum(1 for entrada in entradas if entrada["documento"]),
         "archivos": entradas,
     }
@@ -232,6 +283,8 @@ def indexar(
         "reutilizados": reutilizados,
         "errores": errores,
         "escaneados": escaneados,
+        "con_ocr": con_ocr_ok,
+        "ocr_errores": ocr_errores,
     }
 
 
@@ -244,6 +297,13 @@ def main(argv: list[str] | None = None) -> int:
         help="índice liviano: nombres y metadatos, sin el texto de los documentos",
     )
     parser.add_argument("--todo", action="store_true", help="incluye archivos que no son documentos (sólo nombre)")
+    parser.add_argument(
+        "--con-ocr",
+        action="store_true",
+        help="reintenta con OCR los PDF escaneados e imágenes sin texto (necesita Tesseract)",
+    )
+    parser.add_argument("--idioma-ocr", default="spa", help="idiomas Tesseract para --con-ocr (por defecto: spa)")
+    parser.add_argument("--dpi-ocr", type=int, default=300, help="resolución del render para --con-ocr (por defecto: 300)")
     parser.add_argument("--json", action="store_true", help="resumen como JSON")
     parser.add_argument("--selftest", action="store_true", help="prueba de humo; no toca nada")
     ws.agregar_argumento(parser)
@@ -261,7 +321,15 @@ def main(argv: list[str] | None = None) -> int:
         origen = origen.parent
 
     try:
-        resumen = indexar(origen, espacio, con_texto=not args.sin_texto, todo=args.todo)
+        resumen = indexar(
+            origen,
+            espacio,
+            con_texto=not args.sin_texto,
+            todo=args.todo,
+            con_ocr=args.con_ocr,
+            idioma_ocr=args.idioma_ocr,
+            dpi_ocr=args.dpi_ocr,
+        )
     except ValueError as error:
         print(f"ERROR: {error}", file=sys.stderr)
         return 1
@@ -278,6 +346,11 @@ def main(argv: list[str] | None = None) -> int:
     if resumen["escaneados"]:
         print(f"PDF escaneados: {resumen['escaneados']} — sin texto extraíble; se buscan con "
               "buscar_documentos.py --escaneados")
+    if resumen.get("con_ocr"):
+        print(f"Con OCR: {resumen['con_ocr']} — su texto también se busca")
+    if resumen.get("ocr_errores"):
+        print(f"Errores de OCR: {resumen['ocr_errores']} — falta Tesseract o falló la conversión; "
+              "el archivo igual quedó en el índice")
     if resumen["errores"]:
         print(f"Errores de lectura: {resumen['errores']} — quedaron en el índice con su error")
     print("Los originales no se tocaron: el mapeo sólo lee.")
@@ -342,6 +415,49 @@ def selftest() -> int:
         con_todo = indexar(raiz, espacio, todo=True)
         if con_todo["total"] != 4:
             print(f"FALLO --todo -> el .exe no entró: {con_todo}")
+            fallos += 1
+
+        # --con-ocr con OCR simulado: el escaneado gana texto_ocr buscable.
+        pdf_falso = raiz / "FOLDER 2" / "escaneo.pdf"
+        pdf_falso.write_bytes(b"%PDF-falso-sin-texto")
+        leer_real = lector.leer
+        ocr_real = mod_ocr.ocr
+        lector.leer = lambda ruta: {  # type: ignore[assignment]
+            "formato": "pdf",
+            "metadatos": {},
+            "paginas": [{"numero": 1, "texto": ""}],
+            "texto": "",
+            "aviso": "el PDF no tiene texto extraíble: parece escaneado.",
+            "ok": True,
+            "ruta": ruta.name,
+            "bytes": 10,
+        }
+        mod_ocr.ocr = lambda ruta, **kwargs: {  # type: ignore[assignment]
+            "ok": True,
+            "ruta": ruta.name,
+            "bytes": 10,
+            "formato": "pdf",
+            "metadatos": {"ocr": "tesseract"},
+            "paginas": [{"numero": 1, "texto": "CONTRATO FAKE POR OCR"}],
+            "texto": "CONTRATO FAKE POR OCR",
+        }
+        try:
+            con_ocr_resumen = indexar(raiz, espacio, con_ocr=True)
+        finally:
+            lector.leer = leer_real  # type: ignore[assignment]
+            mod_ocr.ocr = ocr_real  # type: ignore[assignment]
+        if con_ocr_resumen.get("con_ocr") != 1:
+            print(f"FALLO --con-ocr -> no quedó texto_ocr: {con_ocr_resumen}")
+            fallos += 1
+        indice_ocr = cargar(Path(con_ocr_resumen["indice"]))
+        por_ruta_ocr = {e["ruta"]: e for e in indice_ocr["archivos"]}
+        if por_ruta_ocr.get("FOLDER 2/escaneo.pdf", {}).get("texto_ocr") != "CONTRATO FAKE POR OCR":
+            print(f"FALLO --con-ocr -> texto_ocr ausente: {por_ruta_ocr.get('FOLDER 2/escaneo.pdf')}")
+            fallos += 1
+        # Cambiar de modo invalida el incremental: no se reutiliza un índice sin OCR.
+        sin_ocr = indexar(raiz, espacio, con_ocr=False)
+        if sin_ocr.get("reutilizados"):
+            print(f"FALLO cambio de modo OCR -> se reutilizó: {sin_ocr}")
             fallos += 1
 
     if fallos:

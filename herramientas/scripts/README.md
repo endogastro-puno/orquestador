@@ -15,8 +15,9 @@ nunca modifican lo que el usuario ya tiene.**
 | `listar_generadores.py` | Lista los generadores propios del usuario y los tipos que cubren | **No escribe nada**. Sólo lee `usuario/generadores/` |
 | `leer_documento.py` | Lee `.docx`, `.pdf`, `.xlsx`, `.csv`, `.md`, `.txt` e imágenes (OCR); devuelve texto y estructura | **No escribe nada**. Sólo lee |
 | `menu.py` | Menú que lista y corre todas las facilidades; `--opcion N` las corre directo | **No escribe nada**. Sólo corre otros scripts |
-| `indexar_documentos.py` | Mapea una carpeta completa y guarda el índice incremental en `usuario/indice/` | Sólo escribe el índice (regenerable); **los originales jamás se tocan** |
-| `buscar_documentos.py` | Consulta el índice: por nombre y por contenido, con filtros `--tipo`, `--carpeta`, `--escaneados` | **No escribe nada**. Sólo lee el índice |
+| `indexar_documentos.py` | Mapea una carpeta completa y guarda el índice incremental en `usuario/indice/`; `--con-ocr` reintenta escaneados con Tesseract | Sólo escribe el índice (regenerable); **los originales jamás se tocan** |
+| `buscar_documentos.py` | Consulta el índice: por nombre y por contenido (incluye `texto_ocr`), con filtros `--tipo`, `--carpeta`, `--escaneados` | **No escribe nada**. Sólo lee el índice |
+| `ocr_documento.py` | Lee un PDF escaneado o foto con OCR; `--salida` guarda la transcripción en `entregables/` | Sin `--salida` no escribe nada; con `--salida`, crea un archivo nuevo que no existe |
 | `instalar_plantilla.py` | Copia una plantilla que el usuario ya tiene a `plantillas/propias/` (o `oficiales/`) con el nombre canónico `<tipo>-<variante>.<ext>` | Sólo crea un archivo que **no existe**, con un `--origen` que el usuario pasa explícitamente. Nunca sobrescribe |
 | `nueva_plantilla.py` | Crea una plantilla inicial sobria (`.docx`, `.xlsx` o `.md`) para un tipo | Sólo crea un archivo que **no existe**. Nunca sobrescribe |
 | `selftest.py` | Prueba de humo: genera un documento en un temporal y comprueba el motor | **No escribe nada** en el repositorio |
@@ -51,8 +52,14 @@ ofrece descubrirlos de `herramientas/contratos/tipos/*.json`, no de una lista fi
 formatos: el indexador usa los lectores de `leer_documento.py` (OOXML, pdfplumber,
 openpyxl, OCR) y guarda un JSON por raíz en `usuario/indice/`. El índice es
 incremental — compara tamaño y fecha, relee sólo lo que cambió — y marca los PDF
-escaneados para que `buscar_documentos.py --escaneados` los encuentre. Nunca se
+escaneados para que `buscar_documentos.py --escaneados` los encuentre. Con
+`--con-ocr`, los escaneados se reintentan con `ocr_documento.py` y el texto
+reconocido queda en `texto_ocr`, que la búsqueda también mira. Nunca se
 versiona: contiene texto de documentos privados del usuario.
+
+El catálogo de qué sabe hacer el repositorio (skill + script de cada cosa)
+vive en `herramientas/docs/habilidades.md`: ante la duda de dónde va una
+habilidad nueva, se agrega ahí primero.
 
 Los scripts de Python usan sólo la biblioteca estándar de Python 3.10+, salvo
 `generar_informe_ejecutivo.py` y los generadores propios del usuario (el ejemplo
@@ -117,8 +124,12 @@ python herramientas/scripts/menu.py --selftest
 python herramientas/scripts/indexar_documentos.py --ruta D:\FOLDER-PRINCIPAL
 python herramientas/scripts/buscar_documentos.py "cotización" --tipo docx,pdf
 python herramientas/scripts/buscar_documentos.py --escaneados
+python herramientas/scripts/indexar_documentos.py --ruta D:\FOLDER-PRINCIPAL --con-ocr
 python herramientas/scripts/indexar_documentos.py --selftest
 python herramientas/scripts/buscar_documentos.py --selftest
+python herramientas/scripts/ocr_documento.py escaneo.pdf --texto
+python herramientas/scripts/ocr_documento.py escaneo.pdf --salida transcripcion.txt
+python herramientas/scripts/ocr_documento.py --selftest
 
 python herramientas/scripts/selftest.py
 

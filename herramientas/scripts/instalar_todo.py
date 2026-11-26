@@ -23,7 +23,7 @@ Uso::
     python herramientas/scripts/instalar_todo.py --plan   # sólo muestra el plan
     python herramientas/scripts/instalar_todo.py          # pregunta y ejecuta
     python herramientas/scripts/instalar_todo.py --si     # sin preguntar
-    python herramientas/scripts/instalar_todo.py --si --sin-ocr
+    python herramientas/scripts/instalar_todo.py --si --con-ocr  # incluye Tesseract + pytesseract
 
 Salida: ``0`` si quedó todo listo, ``1`` si falta algo o si algo falló.
 """
@@ -175,7 +175,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--con-ocr",
         action="store_true",
-        help="instala además Tesseract, para leer PDF escaneados (opcional)",
+        help="instala además Tesseract y pytesseract, para leer PDF escaneados (opcional)",
     )
     args = parser.parse_args(argv)
 
@@ -230,6 +230,11 @@ def main(argv: list[str] | None = None) -> int:
         tareas.append(f"Instalar {nombre} ({para_que})")
     if necesita_pip:
         tareas.append("Instalar las librerías de Python")
+    if args.con_ocr:
+        # El puente no está en requirements.txt (es opcional): sin él, el
+        # binario Tesseract queda instalado pero el verificador lo sigue
+        # marcando ausente y el OCR no corre.
+        tareas.append("Instalar el puente Python → Tesseract (pytesseract)")
     if necesita_npm:
         tareas.append("Instalar la librería de Node")
 
@@ -314,6 +319,15 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print("      no se pudieron instalar")
             fallos.append(f"Librerías de Python: {detalle}")
+
+    if args.con_ocr:
+        print("Puente Python → Tesseract (pytesseract)...", flush=True)
+        ok, detalle = ejecutar([sys.executable, "-m", "pip", "install", "pytesseract"])
+        if ok:
+            print("      instalado")
+        else:
+            print("      no se pudo instalar")
+            fallos.append(f"Puente pytesseract: {detalle}")
 
     if necesita_npm:
         print(f"[{len(tareas)}/{len(tareas)}] Librería de Node...", flush=True)

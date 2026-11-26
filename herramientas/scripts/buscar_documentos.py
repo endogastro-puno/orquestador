@@ -12,8 +12,9 @@ PDFs escaneados: dónde están::
     python herramientas/scripts/buscar_documentos.py contrato --tipo docx,pdf --raiz folder-principal
 
 Sin consulta, lista lo que pida el filtro (por ejemplo, todos los PDF
-escaneados). Con ``--solo-nombres`` no busca en el texto: sólo en los
-nombres de archivo.
+escaneados). Con ``--solo-nombres`` no busca en el texto ni en el OCR: sólo
+en los nombres de archivo. Si el índice se armó con ``--con-ocr``, la
+búsqueda también encuentra el texto reconocido (`donde: ocr`).
 
 La ruta de cada resultado es relativa a su raíz indexada; la raíz se
 identifica una sola vez en el encabezado, como hace ``leer_documento.py``
@@ -123,6 +124,9 @@ def buscar(
                 elif not solo_nombres and busqueda in normalizar(entrada.get("texto") or ""):
                     donde = "texto"
                     snippet = _snippet(entrada.get("texto") or "", busqueda)
+                elif not solo_nombres and busqueda in normalizar(entrada.get("texto_ocr") or ""):
+                    donde = "ocr"
+                    snippet = _snippet(entrada.get("texto_ocr") or "", busqueda)
                 if donde is None:
                     continue
             elif consulta == "" and (tipos or carpeta or escaneados):
@@ -140,6 +144,7 @@ def buscar(
                         "extension": entrada.get("extension"),
                         "documento": entrada.get("documento", True),
                         "escaneado": bool(entrada.get("escaneado")),
+                        "con_ocr": bool(entrada.get("texto_ocr")),
                         "bytes": entrada.get("bytes"),
                         "fecha": _fecha(entrada.get("mtime")),
                         "donde": donde,
@@ -212,12 +217,15 @@ def main(argv: list[str] | None = None) -> int:
     for posicion, resultado in enumerate(resultados, start=1):
         etiquetas = [resultado["extension"] or "?", _kb(resultado["bytes"]), resultado["fecha"]]
         if resultado["escaneado"]:
-            etiquetas.append("escaneado: sí, necesita OCR")
+            etiquetas.append("escaneado: sí, necesita OCR" if not resultado["con_ocr"] else "escaneado: sí, con OCR")
+        if resultado["donde"] == "ocr":
+            etiquetas.append("match en OCR")
         if resultado["error"]:
             etiquetas.append(f"error de lectura: {resultado['error']}")
         print(f"[{posicion}] {resultado['ruta']}  ·  {'  ·  '.join(etiquetas)}")
         if resultado["snippet"]:
-            print(f"    texto: “{resultado['snippet']}”")
+            origen = "ocr" if resultado["donde"] == "ocr" else "texto"
+            print(f"    {origen}: “{resultado['snippet']}”")
     if total > len(resultados):
         print(f"\n[... {total - len(resultados)} coincidencia(s) más: subí --max]")
     return 0
@@ -272,6 +280,30 @@ def selftest() -> int:
         resultados, _ = buscar(indices, consulta="nota", solo_nombres=True)
         if {resultado["ruta"] for resultado in resultados} != {"varios/nota.md"}:
             print(f"FALLO --solo-nombres -> {resultados}")
+            fallos += 1
+
+        # OCR: el texto reconocido también se busca (donde: ocr).
+        indices_ocr = [
+            {
+                "raiz": str(raiz),
+                "archivos": [
+                    {
+                        "ruta": "escaneo.pdf",
+                        "nombre": "escaneo.pdf",
+                        "carpeta": ".",
+                        "extension": ".pdf",
+                        "documento": True,
+                        "escaneado": True,
+                        "texto": "",
+                        "texto_ocr": "CONTRATO RECONOCIDO POR OCR",
+                        "mtime": 1_700_000_000,
+                    }
+                ],
+            }
+        ]
+        resultados, _ = buscar(indices_ocr, consulta="contrato")
+        if not resultados or resultados[0]["donde"] != "ocr" or not resultados[0]["snippet"]:
+            print(f"FALLO búsqueda en OCR -> {resultados}")
             fallos += 1
 
     if fallos:

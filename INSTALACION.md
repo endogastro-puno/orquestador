@@ -112,7 +112,7 @@ preguntar.
 | **LibreOffice** | `winget install TheDocumentFoundation.LibreOffice` | Convertir a PDF, recalcular fórmulas de Excel, aceptar cambios | Sí, para Word/Excel/PDF |
 | **Poppler** | `winget install oschwartz10612.Poppler` | `pdftoppm`: renderizar páginas para revisarlas | Sí, para Word/PDF |
 | **Tesseract OCR** | `winget install tesseract-ocr.tesseract` | Leer PDF escaneado (imagen) | No, sólo OCR |
-| **`pytesseract`** | `python -m pip install pytesseract` | Puente Python → Tesseract | No, sólo OCR |
+| **`pytesseract`** | `python herramientas/scripts/instalar_todo.py --si --con-ocr` (o `python -m pip install pytesseract`) | Puente Python → Tesseract | No, sólo OCR |
 | **`markitdown`** | `python -m pip install markitdown` | Vistazo rápido de una hoja desde la terminal | No, comodidad |
 
 ### Una aclaración que evita perder tiempo
@@ -354,7 +354,10 @@ python herramientas/scripts/validar_datos.py --estricto
   con `pip` vacío.
   Excepción: leer un **PDF** necesita `pdfplumber` o `pypdf`, y leer un **Excel**
   necesita `openpyxl` — ambas ya vienen en `requirements.txt`. Un `.docx`, un `.csv`
-  o un `.md` se leen sin instalar nada.
+  o un `.md` se leen sin instalar nada. Pasar **OCR** (`ocr_documento.py`,
+  `indexar_documentos.py --con-ocr`) necesita la cadena Tesseract
+  (`herramientas/docs/ocr-de-documentos.md`): sin ella falla avisando qué
+  instalar, nunca finge texto.
 - **`python-docx` para el motor.** El motor y el renderizador de Word no lo usan.
   Lo usan los generadores propios del usuario (el ejemplo incluido) y el generador
   de demostración; por eso está en `requirements.txt`.
@@ -378,9 +381,11 @@ Base obligatoria:      Python 3.10+  ·  git
 Python:                pip install -r requirements.txt
 Node:                  npm install
 Programas del sistema: Pandoc  ·  LibreOffice  ·  Poppler  (+ Tesseract opcional)
+OCR completo:          python herramientas/scripts/instalar_todo.py --si --con-ocr
 Verificar:             python herramientas/scripts/verificar_entorno.py
 Instalar lo que falta: python herramientas/scripts/instalar_todo.py --si
 Preparar tu zona:      python herramientas/scripts/init_local.py
 ¿Funciona acá?:        python herramientas/scripts/selftest.py
 Leer un insumo:        python herramientas/scripts/leer_documento.py <archivo>
+Leer un escaneado:     python herramientas/scripts/ocr_documento.py <archivo>
 ```

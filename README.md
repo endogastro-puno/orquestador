@@ -95,6 +95,23 @@ cambió. La búsqueda encuentra por nombre **y por el texto de adentro**, sin
 tildes ni mayúsculas. Y los **PDF escaneados quedan marcados**: saber dónde están
 todos los que necesitan OCR es una sola consulta.
 
+Si además querés que esos escaneados sean buscables por contenido, mapeá con OCR:
+
+```bash
+python herramientas/scripts/indexar_documentos.py --ruta D:\FOLDER-PRINCIPAL --con-ocr
+python herramientas/scripts/ocr_documento.py expediente-escaneado.pdf --texto
+```
+
+Necesita Tesseract (se instala con `instalar_todo.py --si --con-ocr`). Detalle:
+[`herramientas/docs/ocr-de-documentos.md`](herramientas/docs/ocr-de-documentos.md).
+
+## Qué sabemos hacer (habilidades)
+
+El catálogo completo —leer, plantillas, redactar, generar, entorno— con su
+skill y su script cada una:
+[`herramientas/docs/habilidades.md`](herramientas/docs/habilidades.md).
+Si algo no está ahí, no existe: preguntá antes de suponerlo.
+
 ## Tu plantilla, la que ya tenés
 
 No hace falta rediseñar nada: si ya tenés un membrete o una planilla que usás
@@ -226,10 +243,12 @@ orquestador/
 └── herramientas/                   # ← NUESTRA ZONA
     ├── contratos/                  # *.example: el esquema de tus datos
     ├── docs/
+    │   ├── habilidades.md            # qué sabemos hacer: skill + script de cada cosa
     │   ├── limites.md              # la frontera, en detalle
-    │   ├── tipos-de-documento.md   # 10 tipos con datos obligatorios y esqueletos
+    │   ├── tipos-de-documento.md   # 12 tipos con datos obligatorios y esqueletos
     │   ├── flujo-de-trabajo.md     # pipeline de 7 pasos
-    │   ├── lectura-de-documentos.md # leer Word, PDF, Excel y texto
+    │   ├── lectura-de-documentos.md # leer Word, PDF, Excel, texto e imágenes
+    │   ├── ocr-de-documentos.md    # leer escaneados con Tesseract
     │   └── contrato-generador.md   # cómo se usa tu plantilla escrita en código
     ├── ejemplos/                   # ejemplo de generador propio
     └── scripts/
@@ -239,6 +258,7 @@ orquestador/
         ├── nuevo_entregable.py     # resuelve la ruta con la convención de nombres
         ├── verificar_limites.py    # comprueba que la frontera se respete
         ├── leer_documento.py       # lee Word, PDF, Excel, CSV, texto e imágenes (OCR)
+        ├── ocr_documento.py        # lee escaneados y fotos con Tesseract
         ├── instalar_plantilla.py   # trae tu plantilla existente a plantillas/propias/
         ├── nueva_plantilla.py      # crea una plantilla inicial sobria
         ├── indexar_documentos.py   # mapea una carpeta completa (índice incremental)
