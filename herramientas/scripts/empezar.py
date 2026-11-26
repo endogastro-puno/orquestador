@@ -274,6 +274,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         creadas, existentes, errores = crear_plantillas(espacio)
         resultado["plantillas_creadas"] = creadas
+        resultado["plantillas_error"] = errores
         print(
             f"  Creadas: {len(creadas)} (una por tipo)"
             if creadas
@@ -308,10 +309,11 @@ def main(argv: list[str] | None = None) -> int:
     print("  2. Abrí el menú y elegí una opción:")
     print("       python herramientas/scripts/menu.py")
 
-    if estado is not None and not obligatorios:
+    if estado is not None and not obligatorios and not resultado["plantillas_error"]:
         print("\nTODO LISTO: la estructura y el entorno quedaron preparados.")
 
-    return 0 if estado is not None and not obligatorios else 1
+    todo_ok = estado is not None and not obligatorios and not resultado["plantillas_error"]
+    return 0 if todo_ok else 1
 
 
 def selftest() -> int:

@@ -185,6 +185,20 @@ class TestMain(BaseTemporal):
         self.assertEqual(codigo, 1)
         self.assertNotIn("TODO LISTO", salida.getvalue())
 
+    def test_error_al_crear_una_plantilla_devuelve_uno(self) -> None:
+        estado = {"faltantes_obligatorios": [], "faltantes_opcionales": []}
+        salida = io.StringIO()
+        with mock.patch.object(empezar, "_verificar", return_value=estado):
+            with mock.patch.object(empezar.np, "crear", side_effect=OSError("disco lleno")):
+                with redirect_stdout(salida):
+                    codigo = empezar.main(
+                        ["--si", "--sin-instalar", "--workspace", str(self.espacio)]
+                    )
+
+        self.assertEqual(codigo, 1)
+        self.assertIn("disco lleno", salida.getvalue())
+        self.assertNotIn("TODO LISTO", salida.getvalue())
+
     def test_selftest(self) -> None:
         with redirect_stdout(io.StringIO()):
             self.assertEqual(empezar.selftest(), 0)

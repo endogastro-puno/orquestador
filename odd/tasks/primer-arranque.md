@@ -49,7 +49,7 @@ ni una plantilla. Ahora un solo comando deja todo listo.
 |----|-------|------|--------|-----------|
 | T1 | S1 S2 S3 S5 S7 | inline | hecho | `herramientas/scripts/empezar.py` (`preparar`, `crear_plantillas`, `datos_pendientes`, `mostrar_plan`, `main`, `selftest`) |
 | T2 | S6 | inline | hecho | `herramientas/scripts/menu.py` (acción 15, `necesita_primer_arranque`, sugerencia en `mostrar_menu`) |
-| T3 | S1–S9 | inline | hecho | `herramientas/tests/test_empezar.py` (22 pruebas) |
+| T3 | S1–S9 | inline | hecho | `herramientas/tests/test_empezar.py` (23 pruebas) |
 | T4 | S1 S4 S6 | inline | hecho | `README.md`, `INSTALACION.md`, `AGENTS.md`, `habilidades.md`, `scripts/README.md` |
 | T5 | S8 S9 | inline | hecho | `EMPEZAR.bat`, `MENU.bat`, `.gitattributes`; pruebas de lanzadores y de `TODO LISTO` en `test_empezar.py` |
 
@@ -85,3 +85,8 @@ ni una plantilla. Ahora un solo comando deja todo listo.
   funcionaron igual. De paso, el mensaje final de `empezar.py` se alineó con la
   guía (`TODO LISTO`) y el código de salida pasó a `1` cuando no se pudo
   verificar el entorno.
+- **L6** (2026-11-26) — Cierre: el único defecto restante era que un error al
+  crear una plantilla se mostraba pero no cambiaba el código de salida (el spec
+  S7 promete `1` ante error de escritura). Ahora `plantillas_error` llega al
+  resultado, bloquea el `TODO LISTO` y devuelve `1`. Prueba nueva con
+  `np.crear` forzado a `OSError`: 204 pruebas en verde.
